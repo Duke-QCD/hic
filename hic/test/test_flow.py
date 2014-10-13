@@ -13,3 +13,7 @@ def test_qn():
 
     assert np.allclose(flow.qn(3, np.arange(-np.pi, np.pi, 10)), -1+0j), \
         'Isotropic q_n.'
+
+
+def test_flow_cumulant():
+    pass
