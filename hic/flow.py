@@ -2,6 +2,8 @@
 
 from __future__ import division
 
+import collections
+
 import numpy as np
 import numexpr as ne
 
@@ -18,30 +20,73 @@ def qn(n, phi):
 
 class FlowCumulant(object):
     def __init__(self, multiplicities, qn):
-        self.multiplicities = np.asarray(multiplicities)
+        self._M = np.asarray(multiplicities, dtype=np.float64)
         self._qn = dict(qn)
-        self._corr2 = {}
-        self._corr4 = {}
+        self._corr = collections.defaultdict(dict)
 
-    def _calculate_corr2(self, n):
+    def _get_qn(self, n):
         try:
-            qn = self._qn[n]  # noqa
+            return self._qn[n]
         except KeyError:
-            raise
+            raise ValueError(
+                'q_{} is required for this calculation but was not provided.'
+                .format(n)
+            )
 
-        M = self.multiplicities  # noqa
-        self._corr[n][2] = ne.evaluate(
-            'sum(qn*conj(qn) - M) / sum(M*(M-1))'
-        )
+    def _calculate_corr(self, n, k):
+        M = self._M  # noqa
+        qn = self._get_qn(n)  # noqa
 
-    def _calculate_corr4(self, n):
-        pass
+        if k == 2:
+            numerator = ne.evaluate('sum(real(qn*conj(qn)) - M)')
+            denominator = ne.evaluate('sum(M*(M-1))')
 
-    def _get_corr(self, n, k):
-        pass
+        elif k == 4:
+            q2n = self._get_qn(2*n)  # noqa
+            numerator = ne.evaluate(
+                '''sum(
+                real(qn*conj(qn))**2 +
+                real(q2n*conj(q2n)) -
+                2*real(q2n*conj(qn)*conj(qn)) -
+                4*(M-2)*real(qn*conj(qn)) +
+                2*M*(M-3)
+                )'''
+            )
+            denominator = ne.evaluate('sum(M*(M-1)*(M-2)*(M-3))')
+
+        else:
+            raise ValueError('Unknown k: {}.'.format(k))
+
+        self._corr[n][k] = numerator / denominator
 
     def correlation(self, n, k):
-        pass
+        self._calculate_corr(n, k)
+        return self._corr[n][k]
 
-    def cumulant(self, n, k, error=False, negative_imaginary=False):
-        pass
+    def cumulant(self, n, k, error=False):
+        corr_nk = self.correlation(n, k)
+
+        if k == 2:
+            return corr_nk
+        elif k == 4:
+            corr_n2 = self.correlation(n, 2)
+            return corr_nk - 2*corr_n2*corr_n2
+
+    _cnk_prefactor = {2: 1, 4: -1}
+
+    def flow(self, n, k, error=False, imaginary='nan'):
+        cnk = self.cumulant(n, k)
+        vnk_to_kth_power = self._cnk_prefactor[k] * cnk
+        one_over_k = 1./k
+
+        if vnk_to_kth_power >= 0:
+            vnk = vnk_to_kth_power**one_over_k
+        else:
+            if imaginary == 'negative':
+                vnk = -1*(-vnk_to_kth_power)**one_over_k
+            elif imaginary == 'zero':
+                vnk = 0.
+            else:
+                vnk = np.nan
+
+        return vnk
