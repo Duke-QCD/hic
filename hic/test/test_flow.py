@@ -31,5 +31,14 @@ def test_qn(seed=1248):
         'Incorrect random q_n.\n{} != {}'.format(q, correct_q)
 
 
-def test_flow_cumulant():
-    pass
+def test_flow_cumulant(seed=1248):
+    np.random.seed(seed)
+    Nev = 10
+    M = 10
+    events = 2*np.pi*(np.random.rand(Nev, M) - .5)
+    qn = (
+        (n, np.array([flow.qn(n, phi) for phi in events]))
+        for n in range(2, 5)
+    )
+    vnk = flow.FlowCumulant(M*np.ones(Nev), qn)
+    v22 = vnk.cumulant(2, 2)
