@@ -8,6 +8,10 @@ import numexpr as ne
 __all__ = 'qn', 'FlowCumulant'
 
 
+# If a variable is only ever used by numexpr, flake8 will flag it as unused.
+# The comment 'noqa' prevents this warning.
+
+
 def qn(n, phi):
     return ne.evaluate('sum(exp(1j*n*phi))')
 
