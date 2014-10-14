@@ -3,42 +3,47 @@
 from __future__ import division
 
 import numpy as np
+from nose.tools import assert_raises
 
 from .. import flow
 
 
-def test_qn(seed=1248):
+def test_qn():
+    """flow vectors q_n"""
+
+    # This is _almost_ unnecessary.  It would be tough to screw up q_n.
+
     # q_n(0) = 1
     q = flow.qn(2, 0)
-    assert q == 1+0j, \
+    assert q == 1., \
         'Incorrect single-particle q_n ({} != 1).'.format(q)
 
-    # q_3(uniform phi) = -1
-    q = flow.qn(3, np.arange(-np.pi, np.pi, 10))
-    assert abs(q+1) < 1e-12, \
-        'Incorrect isotropic q_n ({} != -1).'.format(q)
-
-    # specific example
-    np.random.seed(seed)
-    phi = 2*np.pi*(np.random.rand(10) - .5)
-    q = np.array([flow.qn(n, phi) for n in range(2, 5)])
-    correct_q = np.array((
-        -0.23701789876111995+1.9307467860155012j,
-        0.7294873796006498+0.4925428484240118j,
-        2.0248053489550459-0.23452484252744438j
-    ))
-    assert np.allclose(q, correct_q), \
-        'Incorrect random q_n.\n{} != {}'.format(q, correct_q)
+    # q_3(isotropic phi) = -1
+    q = flow.qn(3, (0, np.pi/3, -np.pi/3))
+    assert q == -1., \
+        'Incorrect isotropic q_3 ({} != -1).'.format(q)
 
 
-def test_flow_cumulant(seed=1248):
-    np.random.seed(seed)
+def test_flow_cumulant():
+    """flow correlations and cumulants"""
+
     Nev = 10
-    M = 10
-    events = 2*np.pi*(np.random.rand(Nev, M) - .5)
-    qn = (
-        (n, np.array([flow.qn(n, phi) for phi in events]))
-        for n in range(2, 5)
-    )
+    M = 100
+
+    # Fabricate q_2 for perfectly fluctuating "flow" (no actual flow).
+    qn = {2: M**.5*np.ones(Nev)}
     vnk = flow.FlowCumulant(M*np.ones(Nev), qn)
-    v22 = vnk.cumulant(2, 2)
+
+    corr22 = vnk.correlation(2, 2)
+    assert corr22 == 0., \
+        'Purely statistical correlation must vanish ({} != 0).'.format(corr22)
+
+    c22 = vnk.cumulant(2, 2)
+    assert c22 == 0., \
+        'Purely statistical cumulant must vanish ({} != 0).'.format(c22)
+
+    v22 = vnk.flow(2, 2)
+    assert v22 == 0., \
+        'Purely statistical flow must vanish ({} != 0).'.format(v22)
+
+    assert_raises(ValueError, vnk.correlation, 2, 4)
