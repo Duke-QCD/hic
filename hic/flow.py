@@ -6,17 +6,17 @@ import collections
 import warnings
 
 import numpy as np
-import numexpr as ne
 
 __all__ = 'qn', 'FlowCumulant'
 
 
-# If a variable is only ever used by numexpr, flake8 will flag it as unused.
-# The comment 'noqa' prevents this warning.
-
-
 def qn(n, phi):
-    return ne.evaluate('sum(exp(1j*n*phi))')
+    phi = np.asarray(phi)
+    return np.exp(1j*n*phi).sum()
+
+
+def square_complex(z):
+    return np.square(z.real) + np.square(z.imag)
 
 
 class FlowCumulant(object):
@@ -51,30 +51,27 @@ class FlowCumulant(object):
         if k in self._corr[n]:
             return
 
-        M = self._M  # noqa
-        qn = self._get_qn(n)  # noqa
+        M = self._M
+        qn = self._get_qn(n)
 
         if k == 2:
-            numerator = ne.evaluate('sum(real(qn*conj(qn)) - M)')
-            denominator = ne.evaluate('sum(M*(M-1))')
+            self._corr[n][k] = np.sum(square_complex(qn) - M) / np.sum(M*(M-1))
 
         elif k == 4:
-            q2n = self._get_qn(2*n)  # noqa
-            numerator = ne.evaluate(
-                '''sum(
-                real(qn*conj(qn))**2 +
-                real(q2n*conj(q2n)) -
-                2*real(q2n*conj(qn)*conj(qn)) -
-                4*(M-2)*real(qn*conj(qn)) +
-                2*M*(M-3)
-                )'''
+            q2n = self._get_qn(2*n)
+            qnsq = square_complex(qn)
+            self._corr[n][k] = (
+                np.sum(
+                    np.square(qnsq) +
+                    square_complex(q2n) -
+                    2*(q2n*np.square(qn.conj())).real -
+                    4*(M-2)*qnsq +
+                    2*M*(M-3)
+                ) / np.sum(M*(M-1)*(M-2)*(M-3))
             )
-            denominator = ne.evaluate('sum(M*(M-1)*(M-2)*(M-3))')
 
         else:
             raise ValueError('Unknown k: {}.'.format(k))
-
-        self._corr[n][k] = numerator / denominator
 
     def correlation(self, n, k):
         """

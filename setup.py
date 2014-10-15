@@ -18,7 +18,7 @@ setup(
     url='https://github.com/jbernhard/hic',
     license='MIT',
     packages=['hic', 'hic.test'],
-    install_requires=['numexpr'],
+    install_requires=['numpy'],
     classifiers=[
         'Development Status :: 1 - Planning',
         'Intended Audience :: Developers',
