@@ -20,6 +20,17 @@ def qn(n, phi):
 
 
 class FlowCumulant(object):
+    """
+    Flow correlation and cumulant calculator.
+
+    multiplicities: (nevents,)
+        Event-by-event multiplicities.
+
+    qn:
+        Event-by-event q_n vectors.  Must be an object that can be directly
+        used to construct a dict of the form {n: q_n, m: q_m, ...}.
+
+    """
     def __init__(self, multiplicities, qn):
         self._M = np.asarray(multiplicities, dtype=np.float64)
         self._qn = {n: np.asarray(q, dtype=np.complex128)
@@ -36,6 +47,7 @@ class FlowCumulant(object):
             )
 
     def _calculate_corr(self, n, k):
+        # skip if this correlation was already calculated
         if k in self._corr[n]:
             return
 
@@ -65,10 +77,18 @@ class FlowCumulant(object):
         self._corr[n][k] = numerator / denominator
 
     def correlation(self, n, k):
+        """
+        Calculate k-particle correlation for nth-order anisotropy.
+
+        """
         self._calculate_corr(n, k)
         return self._corr[n][k]
 
     def cumulant(self, n, k, error=False):
+        """
+        Calculate cumulant c_n{k}.
+
+        """
         corr_nk = self.correlation(n, k)
 
         if k == 2:
@@ -80,6 +100,16 @@ class FlowCumulant(object):
     _cnk_prefactor = {2: 1, 4: -1}
 
     def flow(self, n, k, error=False, imaginary='nan'):
+        """
+        Calculate flow v_n{k}.
+
+        imaginary (optional):
+            Determines what is returned when the flow is imaginary:
+            * 'nan' (default) -> NaN, and raise RuntimeWarning
+            * 'negative' -> negative absolute value
+            * 'zero' -> 0.0
+
+        """
         cnk = self.cumulant(n, k)
         vnk_to_k = self._cnk_prefactor[k] * cnk
         kinv = 1/k
