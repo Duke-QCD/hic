@@ -35,6 +35,9 @@ class FlowCumulant(object):
             )
 
     def _calculate_corr(self, n, k):
+        if k in self._corr[n]:
+            return
+
         M = self._M  # noqa
         qn = self._get_qn(n)  # noqa
 
