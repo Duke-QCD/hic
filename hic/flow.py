@@ -3,6 +3,7 @@
 from __future__ import division
 
 import collections
+import warnings
 
 import numpy as np
 import numexpr as ne
@@ -76,17 +77,18 @@ class FlowCumulant(object):
 
     def flow(self, n, k, error=False, imaginary='nan'):
         cnk = self.cumulant(n, k)
-        vnk_to_kth_power = self._cnk_prefactor[k] * cnk
-        one_over_k = 1./k
+        vnk_to_k = self._cnk_prefactor[k] * cnk
+        kinv = 1/k
 
-        if vnk_to_kth_power >= 0:
-            vnk = vnk_to_kth_power**one_over_k
+        if vnk_to_k >= 0:
+            vnk = vnk_to_k**kinv
         else:
             if imaginary == 'negative':
-                vnk = -1*(-vnk_to_kth_power)**one_over_k
+                vnk = -1*(-vnk_to_k)**kinv
             elif imaginary == 'zero':
                 vnk = 0.
             else:
-                vnk = np.nan
+                warnings.warn('Imaginary flow: returning NaN.', RuntimeWarning)
+                vnk = float('nan')
 
         return vnk
