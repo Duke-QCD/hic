@@ -22,7 +22,8 @@ def qn(n, phi):
 class FlowCumulant(object):
     def __init__(self, multiplicities, qn):
         self._M = np.asarray(multiplicities, dtype=np.float64)
-        self._qn = dict(qn)
+        self._qn = {n: np.asarray(q, dtype=np.complex128)
+                    for n, q in dict(qn).items()}
         self._corr = collections.defaultdict(dict)
 
     def _get_qn(self, n):
