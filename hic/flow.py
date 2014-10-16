@@ -32,6 +32,9 @@ class FlowCumulant(object):
 
     """
     def __init__(self, multiplicities, qn):
+        # Multiplicity must be stored as floating point because the large
+        # powers of M calculated in n-particle correlations can overflow
+        # integers, e.g. 2000^6 > 2^64.
         self._M = np.asarray(multiplicities, dtype=np.float64)
         self._qn = {n: np.asarray(q, dtype=np.complex128)
                     for n, q in dict(qn).items()}
