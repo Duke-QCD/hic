@@ -6,7 +6,7 @@ import itertools
 import warnings
 
 import numpy as np
-from nose.tools import assert_raises, nottest
+from nose.tools import assert_raises
 
 from .. import flow
 
@@ -27,7 +27,6 @@ def test_qn():
         'Incorrect isotropic q_3.\n{} != -1'.format(q)
 
 
-@nottest
 def assert_close(a, b, msg='', tol=1e-15):
     assert abs(a - b) < tol, \
         '{}\n{} != {}'.format(msg, a, b)
