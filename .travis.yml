@@ -16,7 +16,10 @@ before_install:
   - source activate test-environment
 
 install:
-  - conda install setuptools numpy nose
+  - conda install pip setuptools numpy nose
+  - pip install coveralls
   - python setup.py install
 
-script: nosetests --verbose
+script: nosetests --verbose --with-coverage --cover-package=hic
+
+after_success: coveralls
