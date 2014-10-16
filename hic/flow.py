@@ -11,11 +11,22 @@ __all__ = 'qn', 'FlowCumulant'
 
 
 def qn(n, phi):
+    """
+    The nth-order complex q-vector.
+
+    phi: (nparticles,)
+        Azimuthal angles of each particle in an event.
+
+    """
     phi = np.asarray(phi)
     return np.exp(1j*n*phi).sum()
 
 
 def square_complex(z):
+    """
+    Element-wise absolute square, |z|^2.
+
+    """
     return np.square(z.real) + np.square(z.imag)
 
 
