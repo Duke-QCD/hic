@@ -99,4 +99,4 @@ def test_flow_cumulant():
     assert_raises(ValueError, vnk.correlation, 2, 3)
 
     # missing qn
-    assert_raises(ValueError, vnk.cumulant, 2, 6)
+    assert_raises(ValueError, vnk.cumulant, 4, 4)
