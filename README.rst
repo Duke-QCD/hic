@@ -17,5 +17,5 @@ Simple examples
 
   from hic import flow
 
-  vnk = flow.FlowCumulant(mult, ((2, q2), (3, q3)))
+  vnk = flow.FlowCumulant(mult, {2: q2, 3: q3})
   v22 = vnk.flow(2, 2)
