@@ -37,9 +37,10 @@ class FlowCumulant(object):
     multiplicities: (nevents,)
         Event-by-event multiplicities.
 
-    qn:
-        Event-by-event q_n vectors.  Must be an object that can be directly
-        used to construct a dict of the form {n: q_n, m: q_m, ...}.
+    qn: dict or iterable of pairs
+        Event-by-event q_n vectors, either a dict of the form {n: q_n} or an
+        iterable of pairs (n, q_n), where each n is an integer and each q_n is
+        an array (nevents,).
 
     """
     def __init__(self, multiplicities, qn):
@@ -47,8 +48,9 @@ class FlowCumulant(object):
         # powers of M calculated in n-particle correlations can overflow
         # integers, e.g. 2000^6 > 2^64.
         self._M = np.asarray(multiplicities, dtype=np.float64)
+        it = qn.items() if isinstance(qn, dict) else qn
         self._qn = {n: np.asarray(q, dtype=np.complex128)
-                    for n, q in dict(qn).items()}
+                    for n, q in it}
         self._corr = collections.defaultdict(dict)
 
     def _get_qn(self, n):
