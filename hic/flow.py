@@ -7,7 +7,7 @@ import warnings
 
 import numpy as np
 
-__all__ = 'qn', 'FlowCumulant'
+__all__ = 'qn', 'phi_event', 'FlowCumulant'
 
 
 def qn(n, phi):
@@ -20,6 +20,49 @@ def qn(n, phi):
     """
     phi = np.asarray(phi)
     return np.exp(1j*n*phi).sum()
+
+
+def _uniform_phi(M):
+    return 2*np.pi*np.random.rand(M) - np.pi
+
+
+def _flow_pdf(phi, vn, psi):
+    n = np.arange(2, 2+vn.size, dtype=float)
+    pdf = 1 + 2.*np.inner(vn, np.cos(np.outer(phi, n) - psi)).ravel()
+    pdf /= (1 + 2*vn.sum())
+
+    return pdf
+
+
+def phi_event(M, vn=None, psi=0):
+    """
+    Generate azimuthal angles phi with specified flow.
+
+    M: integer
+        Number to generate.
+    vn: array-like
+        List of v_n, starting with v_2.
+    psi: array-like
+        List of reaction-plane angles psi_n.
+
+    """
+    if vn is None:
+        return _uniform_phi(M)
+
+    vn = np.asarray(vn)
+    psi = np.asarray(psi)
+
+    phi_chunks = []
+    while True:
+        total_particles = sum(c.size for c in phi_chunks)
+        if total_particles >= M:
+            break
+        n_to_sample = int(1.1*(M - total_particles))
+        phi = _uniform_phi(n_to_sample)
+        accepted = _flow_pdf(phi, vn, psi) > np.random.rand(n_to_sample)
+        phi_chunks.append(phi[accepted])
+
+    return np.concatenate(phi_chunks)[:M]
 
 
 def square_complex(z):

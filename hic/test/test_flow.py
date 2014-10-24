@@ -27,6 +27,26 @@ def test_qn():
         'Incorrect isotropic q_3.\n{} != -1'.format(q)
 
 
+def _check_phi(M, *args):
+    phi = flow.phi_event(M, *args)
+
+    assert phi.size == M, \
+        'Incorrect number of particles.'
+    assert np.all((phi >= -np.pi) & (phi < np.pi)), \
+        'Azimuthal angle not in [-pi, pi).'
+
+
+def test_phi_event():
+    """event generation"""
+
+    M = 10
+    _check_phi(M)
+    _check_phi(M, .1)
+    _check_phi(M, (.1, 0, .01))
+    _check_phi(M, (.1, 0, .01), 1.)
+    _check_phi(M, (.1, 0, .01), (1., 0, 1.2))
+
+
 def assert_close(a, b, msg='', tol=1e-15):
     assert abs(a - b) < tol, \
         '{}\n{} != {}'.format(msg, a, b)
