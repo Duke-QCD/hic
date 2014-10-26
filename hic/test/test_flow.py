@@ -46,6 +46,16 @@ def test_phi_event():
     _check_phi(M, (.1, 0, .01), 1.)
     _check_phi(M, (.1, 0, .01), (1., 0, 1.2))
 
+    M = 2000
+    vn = .1, .03, .01
+    psi = 1., 1.2, 1.1
+    phi = flow.phi_event(M, vn, psi)
+
+    n = np.arange(2, 2+len(vn), dtype=float)
+    vnobs = np.cos(n*np.subtract.outer(phi, psi)).mean(axis=0)
+    assert np.all(np.abs(vn - vnobs) < 2.*M**(-.5)), \
+        'Flows are not within statistical fluctuation.'
+
 
 def assert_close(a, b, msg='', tol=1e-15):
     assert abs(a - b) < tol, \
