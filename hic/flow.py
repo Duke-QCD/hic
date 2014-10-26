@@ -26,14 +26,14 @@ def _uniform_phi(M):
     return np.random.uniform(-np.pi, np.pi, M)
 
 
-def _flow_pdf_unnormalized(phi, vn, psi):
+def _flow_pdf_unnormalized(phi, vn, psin):
     n = np.arange(2, 2+vn.size, dtype=float)
-    pdf = 1 + 2.*np.inner(vn, np.cos(np.outer(phi, n) - n*psi)).ravel()
+    pdf = 1 + 2.*np.inner(vn, np.cos(np.outer(phi, n) - n*psin)).ravel()
 
     return pdf
 
 
-def flow_pdf(phi, vn=None, psi=0):
+def flow_pdf(phi, vn=None, psin=0):
     """
     Probability density function dN/dphi for the specified flow.
 
@@ -45,15 +45,15 @@ def flow_pdf(phi, vn=None, psi=0):
 
     phi = np.asarray(phi)
     vn = np.asarray(vn)
-    psi = np.asarray(psi)
+    psin = np.asarray(psin)
 
-    pdf = _flow_pdf_unnormalized(phi, vn, psi)
+    pdf = _flow_pdf_unnormalized(phi, vn, psin)
     pdf /= 2.*np.pi
 
     return pdf
 
 
-def sample_flow_pdf(M, vn=None, psi=0):
+def sample_flow_pdf(M, vn=None, psin=0):
     """
     Generate azimuthal angles phi with specified flow.
 
@@ -61,7 +61,7 @@ def sample_flow_pdf(M, vn=None, psi=0):
         Number to generate.
     vn: array-like
         List of v_n, starting with v_2.
-    psi: array-like
+    psin: array-like
         List of reaction-plane angles psi_n.
 
     """
@@ -69,17 +69,16 @@ def sample_flow_pdf(M, vn=None, psi=0):
         return _uniform_phi(M)
 
     vn = np.asarray(vn)
-    psi = np.asarray(psi)
-
-    pdf_max = 1 + 2*vn.sum()
+    psin = np.asarray(psin)
 
     N = 0  # number of phi that have been sampled
     phi = np.empty(M)
+    pdf_max = 1 + 2*vn.sum()
     while N < M:
         n_remaining = M - N
         n_to_sample = int(1.1*n_remaining)
         phi_chunk = _uniform_phi(n_to_sample)
-        phi_chunk = phi_chunk[(_flow_pdf_unnormalized(phi_chunk, vn, psi) >
+        phi_chunk = phi_chunk[(_flow_pdf_unnormalized(phi_chunk, vn, psin) >
                                np.random.uniform(0, pdf_max, n_to_sample))]
         K = min(phi_chunk.size, n_remaining)  # number of phi to take
         phi[N:N+K] = phi_chunk[:K]

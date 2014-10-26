@@ -65,11 +65,11 @@ def test_sample_flow_pdf():
 
     M = 2000
     vn = .1, .03, .01
-    psi = 1., 1.2, 1.1
-    phi = flow.sample_flow_pdf(M, vn, psi)
+    psin = 1., 1.2, 1.1
+    phi = flow.sample_flow_pdf(M, vn, psin)
 
     n = np.arange(2, 2+len(vn), dtype=float)
-    vnobs = np.cos(n*np.subtract.outer(phi, psi)).mean(axis=0)
+    vnobs = np.cos(n*np.subtract.outer(phi, psin)).mean(axis=0)
     assert np.all(np.abs(vn - vnobs) < 2.*M**(-.5)), \
         'Flows are not within statistical fluctuation.'
 
