@@ -52,17 +52,20 @@ def phi_event(M, vn=None, psi=0):
     vn = np.asarray(vn)
     psi = np.asarray(psi)
 
-    phi_chunks = []
-    while True:
-        total_particles = sum(c.size for c in phi_chunks)
-        if total_particles >= M:
-            break
-        n_to_sample = int(1.1*(M - total_particles))
-        phi = _uniform_phi(n_to_sample)
-        accepted = _flow_pdf(phi, vn, psi) > np.random.rand(n_to_sample)
-        phi_chunks.append(phi[accepted])
+    N = 0  # number of phi that have been sampled
+    phi = np.empty(M)
+    while N < M:
+        n_remaining = M - N
+        n_to_sample = int(1.1*n_remaining)
+        phi_chunk = _uniform_phi(n_to_sample)
+        phi_chunk = phi_chunk[(
+            _flow_pdf(phi_chunk, vn, psi) > np.random.rand(n_to_sample)
+        )]
+        K = min(phi_chunk.size, n_remaining)  # number of phi to take
+        phi[N:N+K] = phi_chunk[:K]
+        N += K
 
-    return np.concatenate(phi_chunks)[:M]
+    return phi
 
 
 def square_complex(z):
