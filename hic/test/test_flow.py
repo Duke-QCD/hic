@@ -27,8 +27,25 @@ def test_qn():
         'Incorrect isotropic q_3.\n{} != -1'.format(q)
 
 
+def test_flow_pdf():
+    """flow probability density function"""
+
+    phi = np.random.rand(5)
+    assert np.allclose(flow.flow_pdf(phi), 1/(2*np.pi)), \
+        'Incorrect uniform flow pdf.'
+
+    v2, v3 = .1, .05
+    psi2, psi3 = 0., .5
+    pdf = (1 +
+           2*v2*np.cos(2*(phi - psi2)) +
+           2*v3*np.cos(3*(phi - psi3))
+           )/(2*np.pi)
+    assert np.allclose(flow.flow_pdf(phi, (v2, v3), (psi2, psi3)), pdf), \
+        'Incorrect nonuniform flow pdf.'
+
+
 def _check_phi(M, *args):
-    phi = flow.phi_event(M, *args)
+    phi = flow.sample_flow_pdf(M, *args)
 
     assert phi.size == M, \
         'Incorrect number of particles.'
@@ -36,7 +53,7 @@ def _check_phi(M, *args):
         'Azimuthal angle not in [-pi, pi).'
 
 
-def test_phi_event():
+def test_sample_flow_pdf():
     """event generation"""
 
     M = 10
@@ -49,7 +66,7 @@ def test_phi_event():
     M = 2000
     vn = .1, .03, .01
     psi = 1., 1.2, 1.1
-    phi = flow.phi_event(M, vn, psi)
+    phi = flow.sample_flow_pdf(M, vn, psi)
 
     n = np.arange(2, 2+len(vn), dtype=float)
     vnobs = np.cos(n*np.subtract.outer(phi, psi)).mean(axis=0)

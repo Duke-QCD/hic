@@ -7,7 +7,7 @@ import warnings
 
 import numpy as np
 
-__all__ = 'qn', 'phi_event', 'FlowCumulant'
+__all__ = 'qn', 'flow_pdf', 'sample_flow_pdf', 'FlowCumulant'
 
 
 def qn(n, phi):
@@ -26,15 +26,34 @@ def _uniform_phi(M):
     return np.random.uniform(-np.pi, np.pi, M)
 
 
-def _flow_pdf(phi, vn, psi):
+def _flow_pdf_unnormalized(phi, vn, psi):
     n = np.arange(2, 2+vn.size, dtype=float)
     pdf = 1 + 2.*np.inner(vn, np.cos(np.outer(phi, n) - n*psi)).ravel()
-    pdf /= (1 + 2*vn.sum())
 
     return pdf
 
 
-def phi_event(M, vn=None, psi=0):
+def flow_pdf(phi, vn=None, psi=0):
+    """
+    Probability density function dN/dphi for the specified flow.
+
+    """
+    if vn is None:
+        pdf = np.empty_like(phi)
+        pdf.fill(.5/np.pi)
+        return pdf
+
+    phi = np.asarray(phi)
+    vn = np.asarray(vn)
+    psi = np.asarray(psi)
+
+    pdf = _flow_pdf_unnormalized(phi, vn, psi)
+    pdf /= 2.*np.pi
+
+    return pdf
+
+
+def sample_flow_pdf(M, vn=None, psi=0):
     """
     Generate azimuthal angles phi with specified flow.
 
@@ -52,15 +71,16 @@ def phi_event(M, vn=None, psi=0):
     vn = np.asarray(vn)
     psi = np.asarray(psi)
 
+    pdf_max = 1 + 2*vn.sum()
+
     N = 0  # number of phi that have been sampled
     phi = np.empty(M)
     while N < M:
         n_remaining = M - N
         n_to_sample = int(1.1*n_remaining)
         phi_chunk = _uniform_phi(n_to_sample)
-        phi_chunk = phi_chunk[(
-            _flow_pdf(phi_chunk, vn, psi) > np.random.rand(n_to_sample)
-        )]
+        phi_chunk = phi_chunk[(_flow_pdf_unnormalized(phi_chunk, vn, psi) >
+                               np.random.uniform(0, pdf_max, n_to_sample))]
         K = min(phi_chunk.size, n_remaining)  # number of phi to take
         phi[N:N+K] = phi_chunk[:K]
         N += K
