@@ -23,7 +23,7 @@ def qn(n, phi):
 
 
 def _uniform_phi(M):
-    return 2*np.pi*np.random.rand(M) - np.pi
+    return np.random.uniform(-np.pi, np.pi, M)
 
 
 def _flow_pdf(phi, vn, psi):
