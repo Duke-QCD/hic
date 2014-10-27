@@ -26,6 +26,13 @@ def test_qn():
     assert q == -1., \
         'Incorrect isotropic q_3.\n{} != -1'.format(q)
 
+    n_ = 2, 3
+    phi = np.random.uniform(-np.pi, np.pi, 10)
+    assert np.allclose(
+        flow.qn(n_, phi),
+        [flow.qn(n, phi) for n in n_]
+    ), 'Simultaneous qn do not agree with individuals.'
+
 
 def test_flow_pdf():
     """flow probability density function"""

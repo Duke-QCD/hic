@@ -14,12 +14,20 @@ def qn(n, phi):
     """
     The nth-order complex q-vector.
 
+    n: integer or array-like of integers
+        Order(s) to calculate.
     phi: (nparticles,)
         Azimuthal angles of each particle in an event.
 
     """
     phi = np.asarray(phi)
-    return np.exp(1j*n*phi).sum()
+    n = np.asarray(n)
+
+    qn = np.exp(1j*np.outer(n, phi)).sum(axis=1)
+    if qn.size == 1:
+        qn = qn[0]
+
+    return qn
 
 
 def _uniform_phi(M):
