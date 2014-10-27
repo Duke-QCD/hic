@@ -76,7 +76,7 @@ def sample_flow_pdf(M, vn=None, psin=0):
     pdf_max = 1 + 2*vn.sum()
     while N < M:
         n_remaining = M - N
-        n_to_sample = int(1.1*n_remaining)
+        n_to_sample = int(1.03*pdf_max*n_remaining)
         phi_chunk = _uniform_phi(n_to_sample)
         phi_chunk = phi_chunk[(_flow_pdf_unnormalized(phi_chunk, vn, psin) >
                                np.random.uniform(0, pdf_max, n_to_sample))]
