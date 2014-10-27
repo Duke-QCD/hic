@@ -103,14 +103,6 @@ def sample_flow_pdf(M, vn=None, psin=0):
     return phi
 
 
-def square_complex(z):
-    """
-    Element-wise absolute square, |z|^2.
-
-    """
-    return np.square(z.real) + np.square(z.imag)
-
-
 class FlowCumulant(object):
     """
     Flow correlation and cumulant calculator.
@@ -149,23 +141,26 @@ class FlowCumulant(object):
             return
 
         M = self._M
+        Msum = np.einsum('i->', M)  # fast sum(M)
+        Msqsum = np.inner(M, M)  # fast sum(M^2)
+
         qn = self._get_qn(n)
+        qnsqsum = np.vdot(qn, qn).real  # fast sum(|qn|^2)
 
         if k == 2:
-            self._corr[n][k] = np.sum(square_complex(qn) - M) / np.sum(M*(M-1))
+            self._corr[n][k] = (qnsqsum - Msum) / (Msqsum - Msum)
 
         elif k == 4:
             q2n = self._get_qn(2*n)
-            qnsq = square_complex(qn)
+            q2nsqsum = np.vdot(q2n, q2n).real
+            qnsq = np.square(qn.real) + np.square(qn.imag)
+            qnto4sum = np.inner(qnsq, qnsq)
             self._corr[n][k] = (
-                np.sum(
-                    np.square(qnsq) +
-                    square_complex(q2n) -
-                    2*(q2n*np.square(qn.conj())).real -
-                    4*(M-2)*qnsq +
-                    2*M*(M-3)
-                ) / np.sum(M*(M-1)*(M-2)*(M-3))
-            )
+                qnto4sum +
+                q2nsqsum -
+                2*np.inner(q2n, np.square(qn.conj())).real -
+                2*np.sum(2*(M-2)*qnsq - M*(M-3))
+            ) / np.sum(M*(M-1)*(M-2)*(M-3))
 
         else:
             raise ValueError('Unknown k: {}.'.format(k))
