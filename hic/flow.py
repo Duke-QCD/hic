@@ -71,9 +71,17 @@ def sample_flow_pdf(M, vn=None, psin=0):
     vn = np.asarray(vn)
     psin = np.asarray(psin)
 
+    # Since the flow PDF does not have an analytic inverse CDF, I use a simple
+    # accept-reject sampling algorithm.  This is reasonably efficient since for
+    # normal-sized vn, the PDF is close to flat.  Now due to the overhead of
+    # Python functions, it's desirable to minimize the number of calls to the
+    # random number generator.  Therefore I sample numbers in chunks; most of
+    # the time only one or two chunks should be needed.  Eventually, I might
+    # rewrite this with Cython, but it's fast enough for now.
+
     N = 0  # number of phi that have been sampled
-    phi = np.empty(M)
-    pdf_max = 1 + 2*vn.sum()
+    phi = np.empty(M)  # allocate array for phi
+    pdf_max = 1 + 2*vn.sum()  # sampling efficiency ~ 1/pdf_max
     while N < M:
         n_remaining = M - N
         n_to_sample = int(1.03*pdf_max*n_remaining)
