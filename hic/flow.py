@@ -140,6 +140,7 @@ class FlowCumulant(object):
         if k in self._corr[n]:
             return
 
+        # TODO: put these functions in a _util module
         M = self._M
         Msum = np.einsum('i->', M)  # fast sum(M)
         Msqsum = np.inner(M, M)  # fast sum(M^2)
@@ -161,6 +162,8 @@ class FlowCumulant(object):
                 2*np.inner(q2n, np.square(qn.conj())).real -
                 2*np.sum(2*(M-2)*qnsq - M*(M-3))
             ) / np.sum(M*(M-1)*(M-2)*(M-3))
+
+        # TODO: k == 6
 
         else:
             raise ValueError('Unknown k: {}.'.format(k))
