@@ -57,3 +57,25 @@ class IC(object):
 
         """
         return self._cm
+
+    def ecc(self, n):
+        """
+        Eccentricity epsilon_n.
+
+        """
+        ny, nx = self._profile.shape
+        xmax, ymax = self._xymax
+        xcm, ycm = self._cm
+
+        # create (X, Y) grids relative to CM
+        Y, X = np.mgrid[ymax:-ymax:1j*ny, -xmax:xmax:1j*nx]
+        X -= xcm
+        Y -= ycm
+
+        # create grids of phi angles and R^n weights
+        exp_phi = np.exp(1j*n*np.arctan2(Y, X))
+        Rsq = X*X + Y*Y
+        Rn = Rsq if n == 2 else Rsq**(.5*n)
+        W = self._profile * Rn
+
+        return abs(np.sum(exp_phi*W)) / W.sum()
