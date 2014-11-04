@@ -72,10 +72,23 @@ class IC(object):
         X -= xcm
         Y -= ycm
 
-        # create grids of phi angles and R^n weights
+        # create grid of e^{i*n*phi}
         exp_phi = np.exp(1j*n*np.arctan2(Y, X))
+
+        # create grid of weights = profile * R^n
         Rsq = X*X + Y*Y
-        Rn = Rsq if n == 2 else Rsq**(.5*n)
-        W = self._profile * Rn
+        if n == 1:
+            W = np.sqrt(Rsq, out=Rsq)
+        elif n == 2:
+            W = Rsq
+        else:
+            if n & 1:  # odd n
+                W = np.sqrt(Rsq)
+            else:  # even n
+                W = Rsq
+            # multiply by R^2 until W = R^n
+            for _ in range(int((n-1)/2)):
+                W *= Rsq
+        W *= self._profile
 
         return abs(np.sum(exp_phi*W)) / W.sum()
