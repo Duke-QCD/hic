@@ -20,10 +20,13 @@ def qn(n, phi):
         Azimuthal angles of each particle in an event.
 
     """
-    phi = np.asarray(phi)
+    phi = np.ravel(phi)
     n = np.asarray(n)
 
-    qn = np.exp(1j*np.outer(n, phi)).sum(axis=1)
+    i_n_phi = np.zeros((n.size, phi.size), dtype=complex)
+    np.outer(n, phi, out=i_n_phi.imag)
+
+    qn = np.exp(i_n_phi, out=i_n_phi).sum(axis=1)
     if qn.size == 1:
         qn = qn[0]
 
