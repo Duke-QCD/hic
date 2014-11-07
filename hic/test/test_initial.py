@@ -23,6 +23,7 @@ def test_ic():
     assert_array_almost_equal(ic.cm(), (0, 0),
                               err_msg='Incorrect center of mass.')
 
+    assert_almost_equal(ic.ecc(1), 0, err_msg='Incorrect epsilon_2.')
     assert_almost_equal(ic.ecc(2), 0, err_msg='Incorrect epsilon_2.')
     assert_almost_equal(ic.ecc(3), 0, err_msg='Incorrect epsilon_3.')
     assert_almost_equal(ic.ecc(4), 1, err_msg='Incorrect epsilon_4.')
@@ -46,7 +47,7 @@ def test_ic():
     Y += .04
     Rsq = X*X + Y*Y
 
-    for n in 2, 3, 4:
+    for n in range(1, 5):
         ecc = abs(np.average(
             np.exp(1j*n*np.arctan2(Y, X)),
             weights=S*Rsq**(.5*n)
