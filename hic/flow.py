@@ -39,7 +39,9 @@ def _uniform_phi(M):
 
 def _flow_pdf_unnormalized(phi, vn, psin):
     n = np.arange(2, 2+vn.size, dtype=float)
-    pdf = 1 + 2.*np.inner(vn, np.cos(np.outer(phi, n) - n*psin)).ravel()
+    pdf = np.inner(vn, np.cos(np.outer(phi, n) - n*psin)).ravel()
+    pdf *= 2.
+    pdf += 1.
 
     return pdf
 
