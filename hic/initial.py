@@ -82,7 +82,7 @@ class IC(object):
             if n & 1:  # odd n
                 W = np.sqrt(Rsq)
             else:  # even n
-                W = Rsq
+                W = np.copy(Rsq)
             # multiply by R^2 until W = R^n
             for _ in range(int((n-1)/2)):
                 W *= Rsq
