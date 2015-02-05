@@ -9,14 +9,15 @@ __all__ = 'IC',
 
 class IC(object):
     """
-    Initial condition profile.
+    Initial condition entropy or energy density profile.
 
-    profile: (nx, ny)
-        The IC profile as a block-style grid.  It is assumed that the
-        middle of the array corresponds to (x, y) == (0, 0).
-    dxy: float or pair of floats
-        Grid spacing, either a single value dxy = dx = dy or a pair
-        dxy = (dx, dy).
+    :param array-like profile:
+        The IC profile as a block-style grid.
+
+    :param dxy:
+        Size of each grid cell in fm, either a single value ``dxy = dx = dy``
+        or a pair ``dxy = (dx, dy)``.
+    :type dxy: float or pair of floats
 
     """
     def __init__(self, profile, dxy):
@@ -46,21 +47,24 @@ class IC(object):
 
     def sum(self):
         """
-        Sum of profile scaled by grid cell size.
+        Total entropy or energy.
 
         """
         return self._profile.sum() * self._dx * self._dy
 
     def cm(self):
         """
-        Center of mass coordinates.
+        Center of mass coordinates, assuming the middle of the profile is
+        (0, 0).
 
         """
         return self._cm
 
     def ecc(self, n):
-        """
-        Eccentricity epsilon_n.
+        r"""
+        Calculate eccentricity harmonic `\varepsilon_n`.
+
+        :param int n: Eccentricity order.
 
         """
         ny, nx = self._profile.shape

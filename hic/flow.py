@@ -11,13 +11,17 @@ __all__ = 'qn', 'flow_pdf', 'sample_flow_pdf', 'FlowCumulant'
 
 
 def qn(n, phi):
-    """
-    The nth-order complex q-vector.
+    r"""
+    Calculate the complex flow vector `Q_n`.
 
-    n: integer or array-like of integers
-        Order(s) to calculate.
-    phi: (nparticles,)
-        Azimuthal angles of each particle in an event.
+    :param n: Harmonic(s) `n` to calculate.
+    :type n: int or iterable of ints
+
+    :param array-like phi: Azimuthal angles.
+
+    :returns:
+        A single complex number if only one ``n`` was given or a complex array
+        for multiple ``n``.
 
     """
     phi = np.ravel(phi)
@@ -47,8 +51,21 @@ def _flow_pdf_unnormalized(phi, vn, psin):
 
 
 def flow_pdf(phi, vn=None, psin=0):
-    """
-    Probability density function dN/dphi for the specified flow.
+    r"""
+    Evaluate the flow probability density function `dN/d\phi`.
+
+    :param phi: Azimuthal angle(s) `\phi`.
+    :type phi: float or array-like
+
+    :param vn: (optional)
+        Flow coefficients `v_n`, starting with `v_2`.
+    :type vn: float or iterable of floats
+
+    :param psin: (optional)
+        Event plane angles `\Psi_n` matching ``vn``.
+    :type psin: float or iterable of floats
+
+    :returns: The flow PDF evaluated at ``phi``.
 
     """
     if vn is None:
@@ -66,20 +83,26 @@ def flow_pdf(phi, vn=None, psin=0):
     return pdf
 
 
-def sample_flow_pdf(M, vn=None, psin=0):
-    """
-    Generate azimuthal angles phi with specified flow.
+def sample_flow_pdf(multiplicity, vn=None, psin=0):
+    r"""
+    Randomly sample azimuthal angles `\phi` with specified flows.
 
-    M: integer
-        Number to generate.
-    vn: array-like
-        List of v_n, starting with v_2.
-    psin: array-like
-        List of reaction-plane angles psi_n.
+    :param int multiplicity: Number to sample.
+
+    :param vn: (optional)
+        Flow coefficients `v_n`, starting with `v_2`.
+        If not given, uniformly sample angles from `[-\pi, \pi)`.
+    :type vn: float or iterable of floats
+
+    :param psin: (optional)
+        Event plane angles `\Psi_n` matching ``vn``.
+    :type psin: float or iterable of floats
+
+    :returns: Array of angles.
 
     """
     if vn is None:
-        return _uniform_phi(M)
+        return _uniform_phi(multiplicity)
 
     vn = np.asarray(vn)
     psin = np.asarray(psin)
@@ -93,10 +116,10 @@ def sample_flow_pdf(M, vn=None, psin=0):
     # rewrite this with Cython, but it's fast enough for now.
 
     N = 0  # number of phi that have been sampled
-    phi = np.empty(M)  # allocate array for phi
+    phi = np.empty(multiplicity)  # allocate array for phi
     pdf_max = 1 + 2*vn.sum()  # sampling efficiency ~ 1/pdf_max
-    while N < M:
-        n_remaining = M - N
+    while N < multiplicity:
+        n_remaining = multiplicity - N
         n_to_sample = int(1.03*pdf_max*n_remaining)
         phi_chunk = _uniform_phi(n_to_sample)
         phi_chunk = phi_chunk[(_flow_pdf_unnormalized(phi_chunk, vn, psin) >
@@ -109,16 +132,16 @@ def sample_flow_pdf(M, vn=None, psin=0):
 
 
 class FlowCumulant(object):
-    """
-    Flow correlation and cumulant calculator.
+    r"""
+    Multi-particle flow correlations and cumulants for an ensemble of events.
 
-    multiplicities: (nevents,)
-        Event-by-event multiplicities.
+    :param array-like multiplicities: Event-by-event multiplicities.
 
-    qn: dict or iterable of pairs
-        Event-by-event q_n vectors, either a dict of the form {n: q_n} or an
-        iterable of pairs (n, q_n), where each n is an integer and each q_n is
-        an array (nevents,).
+    :param qn:
+        Event-by-event `Q_n` vectors, either a dict of the form
+        ``{n: qn}`` or an iterable of pairs ``(n, qn)``, where each ``n`` is an
+        integer and each ``qn`` is an array of event-by-event flow vectors.
+    :type qn: dict or iterable of pairs
 
     """
     def __init__(self, multiplicities, qn):
@@ -174,16 +197,24 @@ class FlowCumulant(object):
             raise ValueError('Unknown k: {}.'.format(k))
 
     def correlation(self, n, k):
-        """
-        Calculate k-particle correlation for nth-order anisotropy.
+        r"""
+        Calculate `\langle k \rangle_n`,
+        the `k`-particle correlation function for `n`\ th-order anisotropy.
+
+        :param int n: Flow order.
+        :param int k: Correlation order.
 
         """
         self._calculate_corr(n, k)
         return self._corr[n][k]
 
     def cumulant(self, n, k, error=False):
-        """
-        Calculate cumulant c_n{k}.
+        r"""
+        Calculate `c_n\{k\}`,
+        the `k`-particle cumulant for `n`\ th-order anisotropy.
+
+        :param int n: Flow order.
+        :param int k: Correlation order.
 
         """
         corr_nk = self.correlation(n, k)
@@ -197,14 +228,19 @@ class FlowCumulant(object):
     _cnk_prefactor = {2: 1, 4: -1}
 
     def flow(self, n, k, error=False, imaginary='nan'):
-        """
-        Calculate flow v_n{k}.
+        r"""
+        Calculate `v_n\{k\}`,
+        the estimate of flow coefficient `v_n` from the `k`-particle cumulant.
 
-        imaginary (optional):
-            Determines what is returned when the flow is imaginary:
-            * 'nan' (default) -> NaN, and raise RuntimeWarning
-            * 'negative' -> negative absolute value
-            * 'zero' -> 0.0
+        :param int n: Flow order.
+        :param int k: Correlation order.
+
+        :param str imaginary: (optional)
+            Determines behavior when the computed flow is imaginary:
+
+            - ``'nan'`` (default) -- Return NaN and raise a ``RuntimeWarning``.
+            - ``'negative'`` -- Return the negative absolute value.
+            - ``'zero'`` -- Return ``0.0``.
 
         """
         cnk = self.cumulant(n, k)
