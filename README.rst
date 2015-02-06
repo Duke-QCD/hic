@@ -1,4 +1,3 @@
-===
 hic
 ===
 
@@ -21,12 +20,7 @@ Requirements: Python 2.7 or 3.3+ with numpy_.
 ``hic`` is prerelease software.
 You can install the development version with pip_::
 
-   pip install git+https://github.com/jbernhard/hic#egg=hic
-
-Or, if you want to edit the code, clone the repository and install in editable mode::
-
-   git clone git@github.com:jbernhard/hic.git
-   pip install [--user] -e hic
+   pip install git+https://github.com/jbernhard/hic.git
 
 To run the tests, install nose_ and run ::
 
