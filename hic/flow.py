@@ -10,14 +10,13 @@ import numpy as np
 __all__ = 'qn', 'flow_pdf', 'sample_flow_pdf', 'FlowCumulant'
 
 
-def qn(n, phi):
-    r"""
+def qn(phi, *n):
+    """
     Calculate the complex flow vector `Q_n`.
 
-    :param n: Harmonic(s) `n` to calculate.
-    :type n: int or iterable of ints
-
     :param array-like phi: Azimuthal angles.
+
+    :param int n: One or more harmonics to calculate.
 
     :returns:
         A single complex number if only one ``n`` was given or a complex array
@@ -38,74 +37,92 @@ def qn(n, phi):
 
 
 def _uniform_phi(M):
+    """
+    Generate M random numbers in [-pi, pi).
+
+    """
     return np.random.uniform(-np.pi, np.pi, M)
 
 
-def _flow_pdf_unnormalized(phi, vn, psin):
-    n = np.arange(2, 2+vn.size, dtype=float)
-    pdf = np.inner(vn, np.cos(np.outer(phi, n) - n*psin)).ravel()
+def _flow_pdf_unnormalized(phi, n, vn):
+    """
+    Evaluate the unnormalized flow PDF at phi.
+    n is an array of flow orders.
+    vn is an array of the corresponding flows.
+
+    """
+    pdf = np.inner(vn, np.cos(np.outer(phi, n)))
     pdf *= 2.
     pdf += 1.
-
     return pdf
 
 
-def flow_pdf(phi, vn=None, psin=0):
+def _parse_vn(vn, other_vn):
+    """
+    Parse a list of vn and a dict of vn (as input to flow_pdf and
+    sample_flow_pdf) into two arrays suitable for input to
+    _flow_pdf_unnormalized.
+
+    """
+    vn_dict = {int(k.lstrip('v')): v for k, v in other_vn.items()}
+    vn_dict.update((k, v) for k, v in enumerate(vn, start=2)
+                   if v is not None and v != 0.)
+    kwargs = dict(dtype=float, count=len(vn_dict))
+    n = np.fromiter(vn_dict.keys(), **kwargs)
+    vn = np.fromiter(vn_dict.values(), **kwargs)
+    return n, vn
+
+
+def flow_pdf(phi, *vn, **other_vn):
     r"""
     Evaluate the flow probability density function `dN/d\phi`.
 
-    :param phi: Azimuthal angle(s) `\phi`.
-    :type phi: float or array-like
+    :param array-like phi: Azimuthal angles.
 
-    :param vn: (optional)
-        Flow coefficients `v_n`, starting with `v_2`.
-    :type vn: float or iterable of floats
+    :param float v2, v3, ...:
+        Flow coefficients as positional arguments.
 
-    :param psin: (optional)
-        Event plane angles `\Psi_n` matching ``vn``.
-    :type psin: float or iterable of floats
+    :param float other_vn:
+        Flow coefficients as keyword arguments.
 
     :returns: The flow PDF evaluated at ``phi``.
 
     """
-    if vn is None:
+    if not vn and not other_vn:
         pdf = np.empty_like(phi)
         pdf.fill(.5/np.pi)
         return pdf
 
     phi = np.asarray(phi)
-    vn = np.asarray(vn)
-    psin = np.asarray(psin)
+    n, vn = _parse_vn(vn, other_vn)
 
-    pdf = _flow_pdf_unnormalized(phi, vn, psin)
+    pdf = _flow_pdf_unnormalized(phi, n, vn)
     pdf /= 2.*np.pi
 
     return pdf
 
 
-def sample_flow_pdf(multiplicity, vn=None, psin=0):
+def sample_flow_pdf(multiplicity, *vn, **other_vn):
     r"""
     Randomly sample azimuthal angles `\phi` with specified flows.
 
+    To sample uniform `\phi`, do not specify any flows.
+
     :param int multiplicity: Number to sample.
 
-    :param vn: (optional)
-        Flow coefficients `v_n`, starting with `v_2`.
-        If not given, uniformly sample angles from `[-\pi, \pi)`.
-    :type vn: float or iterable of floats
+    :param float v2, v3, ...:
+        Flow coefficients as positional arguments.
 
-    :param psin: (optional)
-        Event plane angles `\Psi_n` matching ``vn``.
-    :type psin: float or iterable of floats
+    :param float other_vn:
+        Flow coefficients as keyword arguments.
 
-    :returns: Array of angles.
+    :returns: Array of sampled angles.
 
     """
-    if vn is None:
+    if not vn and not other_vn:
         return _uniform_phi(multiplicity)
 
-    vn = np.asarray(vn)
-    psin = np.asarray(psin)
+    n, vn = _parse_vn(vn, other_vn)
 
     # Since the flow PDF does not have an analytic inverse CDF, I use a simple
     # accept-reject sampling algorithm.  This is reasonably efficient since for
@@ -122,7 +139,7 @@ def sample_flow_pdf(multiplicity, vn=None, psin=0):
         n_remaining = multiplicity - N
         n_to_sample = int(1.03*pdf_max*n_remaining)
         phi_chunk = _uniform_phi(n_to_sample)
-        phi_chunk = phi_chunk[(_flow_pdf_unnormalized(phi_chunk, vn, psin) >
+        phi_chunk = phi_chunk[(_flow_pdf_unnormalized(phi_chunk, n, vn) >
                                np.random.uniform(0, pdf_max, n_to_sample))]
         K = min(phi_chunk.size, n_remaining)  # number of phi to take
         phi[N:N+K] = phi_chunk[:K]
@@ -135,23 +152,32 @@ class FlowCumulant(object):
     r"""
     Multi-particle flow correlations and cumulants for an ensemble of events.
 
+    Each argument must be an array-like object where each element corresponds
+    to an event: ``multiplicities`` is an array containing event-by-event
+    multiplicities, ``q2`` is an array of the same size containing the `Q_2`
+    vectors for the same set of events, and so on.
+
     :param array-like multiplicities: Event-by-event multiplicities.
 
-    :param qn:
-        Event-by-event `Q_n` vectors, either a dict of the form
-        ``{n: qn}`` or an iterable of pairs ``(n, qn)``, where each ``n`` is an
-        integer and each ``qn`` is an array of event-by-event flow vectors.
-    :type qn: dict or iterable of pairs
+    :param array-like q2, q3, ...:
+        `Q_n` vectors as positional arguments.
+
+    :param array-like other_qn:
+        `Q_n` vectors as keyword arguments.
 
     """
-    def __init__(self, multiplicities, qn):
+    def __init__(self, multiplicities, *qn, **other_qn):
         # Multiplicity must be stored as floating point because the large
         # powers of M calculated in n-particle correlations can overflow
         # integers, e.g. 2000^6 > 2^64.
-        self._M = np.ravel(multiplicities).astype(float, copy=False)
-        it = qn.items() if isinstance(qn, dict) else qn
-        self._qn = {n: np.ravel(q).astype(complex, copy=False)
-                    for n, q in it}
+        self._M = np.asarray(multiplicities, dtype=float).ravel()
+
+        qn_dict = {int(k.lstrip('q')): v for k, v in other_qn.items()}
+        qn_dict.update(enumerate(qn, start=2))
+        self._qn = {k: np.asarray(v, dtype=complex).ravel()
+                    for k, v in qn_dict.items()
+                    if v is not None}
+
         self._corr = collections.defaultdict(dict)
 
     def _get_qn(self, n):

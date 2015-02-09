@@ -17,20 +17,20 @@ def test_qn():
     # This is _almost_ unnecessary.  It would be tough to screw up q_n.
 
     # q_n(0) = 1
-    q = flow.qn(2, 0)
+    q = flow.qn(0, 2)
     assert q == 1., \
         'Incorrect single-particle q_n.\n{} != 1'.format(q)
 
     # q_3(isotropic phi) = -1
-    q = flow.qn(3, (0, np.pi/3, -np.pi/3))
+    q = flow.qn((0, np.pi/3, -np.pi/3), 3)
     assert q == -1., \
         'Incorrect isotropic q_3.\n{} != -1'.format(q)
 
     n_ = 2, 3
     phi = np.random.uniform(-np.pi, np.pi, 10)
     assert np.allclose(
-        flow.qn(n_, phi),
-        [flow.qn(n, phi) for n in n_]
+        flow.qn(phi, *n_),
+        [flow.qn(phi, n) for n in n_]
     ), 'Simultaneous qn do not agree with individuals.'
 
 
@@ -41,18 +41,23 @@ def test_flow_pdf():
     assert np.allclose(flow.flow_pdf(phi), 1/(2*np.pi)), \
         'Incorrect uniform flow pdf.'
 
-    v2, v3 = .1, .05
-    psi2, psi3 = 0., .5
-    pdf = (1 +
-           2*v2*np.cos(2*(phi - psi2)) +
-           2*v3*np.cos(3*(phi - psi3))
-           )/(2*np.pi)
-    assert np.allclose(flow.flow_pdf(phi, (v2, v3), (psi2, psi3)), pdf), \
+    v2, v3, v4 = .1, .05, .03
+    pdf = (1 + 2*v2*np.cos(2*phi) + 2*v3*np.cos(3*phi))/(2*np.pi)
+    assert np.allclose(flow.flow_pdf(phi, v2, v3), pdf), \
         'Incorrect nonuniform flow pdf.'
 
+    assert np.allclose(
+        flow.flow_pdf(phi, v2, v3, v4),
+        flow.flow_pdf(phi, v3=v3, v4=v4, v2=v2)
+    ), 'Incorrect parsing of vn keyword args.'
+    assert np.allclose(
+        flow.flow_pdf(phi, v2, None, v4),
+        flow.flow_pdf(phi, v4=v4, v2=v2)
+    ), 'Incorrect parsing of vn = None positional arg.'
 
-def _check_phi(M, *args):
-    phi = flow.sample_flow_pdf(M, *args)
+
+def _check_phi(M, *args, **kwargs):
+    phi = flow.sample_flow_pdf(M, *args, **kwargs)
 
     assert phi.size == M, \
         'Incorrect number of particles.'
@@ -66,18 +71,16 @@ def test_sample_flow_pdf():
     M = 10
     _check_phi(M)
     _check_phi(M, .1)
-    _check_phi(M, (.1, 0, .01))
-    _check_phi(M, (.1, 0, .01), 1.)
-    _check_phi(M, (.1, 0, .01), (1., 0, 1.2))
+    _check_phi(M, .1, .01)
+    _check_phi(M, .1, .01, v5=.01)
 
-    M = 2000
+    M = 1000
     vn = .1, .03, .01
-    psin = 1., 1.2, 1.1
-    phi = flow.sample_flow_pdf(M, vn, psin)
+    phi = flow.sample_flow_pdf(M, *vn)
 
     n = np.arange(2, 2+len(vn), dtype=float)
-    vnobs = np.cos(n*np.subtract.outer(phi, psin)).mean(axis=0)
-    assert np.all(np.abs(vn - vnobs) < 2.*M**(-.5)), \
+    vnobs = np.cos(np.outer(n, phi)).mean(axis=1)
+    assert np.all(np.abs(vn - vnobs) < 3.*M**(-.5)), \
         'Flows are not within statistical fluctuation.'
 
 
@@ -101,8 +104,10 @@ def test_flow_cumulant():
         (p1+p2-p3-p4) for p1, p2, p3, p4 in itertools.permutations(phi, 4)
     ])).mean()
 
-    qn = {n: np.exp(1j*n*phi).sum() for n in (2, 4)}
-    vnk = flow.FlowCumulant(M, qn)
+    q2, q4 = (np.exp(1j*n*phi).sum() for n in (2, 4))
+    vnk = flow.FlowCumulant(M, q2, None, q4)
+    assert sorted(vnk._qn.keys()) == [2, 4], \
+        'Incorrect parsing of qn arguments.'
     corr2, corr4 = (vnk.correlation(2, n) for n in (2, 4))
 
     assert_close(corr2, corr2_true, 'Incorrect 2-particle correlation.')
@@ -121,8 +126,8 @@ def test_flow_cumulant():
     Nev = 10
     M = 100
     qfluct = M**.5*np.ones(Nev)
-    qn = {2: 1.1*qfluct, 3: qfluct, 4: 0.9*qfluct}
-    vnk = flow.FlowCumulant(M*np.ones(Nev), qn)
+    qn = 1.1*qfluct, qfluct, 0.9*qfluct
+    vnk = flow.FlowCumulant(M*np.ones(Nev), *qn)
 
     v22 = vnk.flow(2, 2)
     assert v22 > 0, \

@@ -26,14 +26,14 @@ Here are a few quick examples of what ``hic`` can do.
 
 Calculate flow cumulants::
 
-  from hic import flow
+   from hic import flow
 
-  vnk = flow.FlowCumulant(mult, {2: q2, 3: q3})
-  v22 = vnk.flow(2, 2)
+   vnk = flow.FlowCumulant(mult, q2, q3)
+   v22 = vnk.flow(2, 2)
 
 Randomly sample events with specified flows::
 
-  phi = flow.sample_flow_pdf(mult, vn=(v2, v3))
+   phi = flow.sample_flow_pdf(mult, v2, v3)
 
 Calculate initial condition eccentricities::
 

@@ -34,11 +34,11 @@ First, let's generate some random angles::
 And now calculate `Q_2`::
 
    from hic import flow
-   q2 = flow.qn(2, phi)
+   q2 = flow.qn(phi, 2)
 
 We can also do multiple `Q_n` at once::
 
-   q2, q3, q4 = flow.qn((2, 3, 4), phi)
+   q2, q3, q4 = flow.qn(phi, 2, 3, 4)
 
 Flow cumulants
 --------------
@@ -49,5 +49,10 @@ Random sampling
 
 Reference
 ---------
+.. note::
+
+   The ``flow`` module makes repeated use of the ``*args, **kwargs`` idiom.
+   See `stackoverflow <http://stackoverflow.com/a/36908>`_ for an explanation and the user guide above for usage examples.
+
 .. automodule:: hic.flow
    :members:
