@@ -50,7 +50,7 @@ Each has a tutorial with examples and an API reference.
 .. note::
 
    The user guide is a work in progress, and some sections are incomplete.
-   More examples and information will be added over time.
+   More examples and visualizations will be added over time.
 
 .. toctree::
    :maxdepth: 2
