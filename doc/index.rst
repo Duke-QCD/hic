@@ -47,6 +47,11 @@ User guide
 ``hic`` consists of several logically distinct modules.
 Each has a tutorial with examples and an API reference.
 
+.. note::
+
+   The user guide is a work in progress, and some sections are incomplete.
+   More examples and information will be added over time.
+
 .. toctree::
    :maxdepth: 2
 
