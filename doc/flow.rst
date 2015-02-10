@@ -50,8 +50,8 @@ Let's generate some toy data::
 
    # 1000x1000 array, where each row is an "event" of 1000 particles
    phi = np.random.uniform(-np.pi, np.pi, size=1000*1000).reshape(1000, 1000)
-   mult = tuple(p.size for p in phi)
-   q2 = tuple(flow.qn(p, 2) for p in phi)
+   mult = np.array([p.size for p in phi])
+   q2 = np.array([flow.qn(p, 2) for p in phi])
 
 Then create a ``FlowCumulant``::
 
@@ -83,8 +83,7 @@ If you attempt to calculate something and don't have sufficient data, you'll get
 
 Let's calculate some higher-order flow vectors and use them::
 
-   q3 = tuple(flow.qn(p, 3) for p in phi)
-   q4 = tuple(flow.qn(p, 3) for p in phi)
+   q3, q4 = np.array([flow.qn(p, 3, 4) for p in phi]).T
    vnk = flow.FlowCumulant(mult, q2, q3, q4)
    v32 = vnk.flow(3, 2)  # works now
    v24 = vnk.flow(2, 4)  # works
@@ -156,7 +155,7 @@ This should make an image something like this:
 We can also check the observed flows against the inputs::
 
    vnobs = np.abs(flow.qn(phi, *range(2, 6))) / M
-   tuple(zip(vn, vnobs))
+   list(zip(vn, vnobs))
 
 They should be fairly close since the multiplicity was quite large.
 
