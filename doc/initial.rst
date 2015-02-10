@@ -8,17 +8,27 @@ It takes an IC energy or entropy density profile and calculates relevant propert
 Let's fabricate a smooth profile::
 
    import numpy as np
-   X, Y = np.mgrid[-10.:10.1:.1, -10.:10.1:.1]
-   Z = np.exp(-(.2*X*X + .3*Y*Y))
+   Y, X = np.mgrid[-8.:8.1:.1, -8.:8.1:.1]
+   Y = Y[::-1]  # reverse direction
+   Z = np.zeros_like(X)
+   for x0, y0 in (0, 0), (2, 3), (-2, 3), (-3, -2):
+       Z += np.exp(-.2*(np.square(X-x0) + np.square(Y-y0)))
 
-This profile ``Z`` is a two-dimensional Gaussian, wider in the *y*-direction than *x*.
-It's evaluated on a 201x201 grid from -10 to 10 fm in steps of 0.1 fm.
+This profile ``Z`` consists of a few Gaussian blobs evaluated on a 161x161 grid from -8 to 8 fm in steps of 0.1 fm.
+We can visualize it::
+
+   import matplotlib.pyplot as plt
+   plt.imshow(Z, cmap=plt.cm.Blues, interpolation='none')
+   plt.axis('off')
+
+.. image:: _static/ic_profile.png
+
 Now let's create an ``IC`` class from this profile::
 
    from hic import initial
    ic = initial.IC(Z, 0.1)  # second arg is grid spacing
 
-The center of mass of the profile should be zero within numerical precision::
+The center of mass of the profile is (-3/4, 1) within discretization error::
 
    cm = ic.cm()
 
@@ -40,10 +50,13 @@ Continuing with the above example, the ellipticity `\varepsilon_2` is ::
 
    e2 = ic.ecc(2)
 
-It should be about 0.2.
-The triangularity (and all odd-order harmonics) should be zero within numerical precision::
+The triangularity is ::
 
-   np.allclose([ic.ecc(n) for n in range(3, 10, 2)], 0)  # True
+   e3 = ic.ecc(3)
+
+We can make a list of `(n, \varepsilon_n)` pairs::
+
+   [(n, ic.ecc(n)) for n in range(1, 10)]
 
 Reference
 ---------

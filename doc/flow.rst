@@ -25,6 +25,8 @@ The complex flow vector for an event is
    
    Q_n = \sum_{i=1}^M e^{in\phi_i}.
 
+The magnitude of the per-particle flow vector is the *observed* flow `v_n^\text{obs} = |Q_n|/M`, which will in general be different from the true flow due to finite-multiplicity fluctuations.
+
 Flow vectors can be calculated in ``hic`` with ``hic.flow.qn``.
 First, let's generate some random angles::
 
@@ -125,9 +127,38 @@ These are all equivalent::
 Finally, the function ``hic.flow.flow_pdf`` evaluates `dN/d\phi` rather than sampling it::
 
    phi = np.linspace(-np.pi, np.pi, 1000)
-   dndphi = flow.flow_pdf(phi, 0.1, 0.05)
+   dndphi = flow.flow_pdf(phi, 0.1)
 
 The syntax for inputting `v_n` is the same as for ``sample_flow_pdf``.
+
+Let's put this together to sample the flow PDF and histogram the samples on top of the smooth curve::
+
+   import matplotlib.pyplot as plt
+   import seaborn as sns  # nice plot style
+   sns.set(font='Lato')
+
+   M = 10000
+   vn = .1, .05, .02, .01  # shorthand: v2, v3, v4, v5
+   phi = flow.sample_flow_pdf(M, *vn)
+   plt.hist(phi, bins=50, range=(-np.pi, np.pi),
+            histtype='stepfilled', normed=True, alpha=.5)
+   x = np.linspace(-np.pi, np.pi, 1000)
+   plt.plot(x, flow.flow_pdf(x, *vn), color='.3', lw=1.5)
+   plt.xlim(-np.pi, np.pi)
+   plt.ylim(ymin=0)
+   plt.xlabel(r'$\phi$')
+   plt.ylabel(r'$dN/d\phi$')
+
+This should make an image something like this:
+
+.. image:: _static/flow_pdf.png
+
+We can also check the observed flows against the inputs::
+
+   vnobs = np.abs(flow.qn(phi, *range(2, 6))) / M
+   tuple(zip(vn, vnobs))
+
+They should be fairly close since the multiplicity was quite large.
 
 Reference
 ---------
