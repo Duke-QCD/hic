@@ -8,7 +8,7 @@ Flows `v_n` are the Fourier coefficients of the transverse momentum distribution
 
    \frac{dN}{d\phi} = \frac{1}{2\pi} \biggl[ 1 + \sum_{n=1}^\infty 2v_n\cos n(\phi - \Psi_\text{RP}) \biggr],
 
-where `\phi` is the azimuthal angle of transverse momentum, `n` is the order of anisotropy, and `\Psi_\text{RP}` is the reaction plane angle.
+where `\phi` is the azimuthal angle of transverse momentum, `n` is the order of anisotropy, and `\Psi_\text{RP}` is the reaction plane angle (the angle between the impact parameter and the *x*-axis in the lab frame).
 The coefficients are
 
 .. math::
@@ -44,7 +44,7 @@ We can also do multiple `Q_n` at once::
 
 Flow cumulants
 --------------
-Multi-particle flow cumulants are implemented in the class ``hic.flow.Cumulant`` using the direct *Q*-cumulant method from `Bilandzic (2010) <http://inspirehep.net/record/871528>`_, which calculates cumulants from event-by-event multiplicities and `Q_n` vectors.
+Multi-particle flow cumulants are implemented in class ``hic.flow.Cumulant`` using the direct *Q*-cumulant method from `Bilandzic (2010) <http://inspirehep.net/record/871528>`_, which calculates cumulants from event-by-event multiplicities and `Q_n` vectors.
 
 Let's generate some toy data::
 
@@ -66,9 +66,21 @@ The cumulant `c_2\{2\}`::
 
    c22 = vnk.cumulant(2, 2)
 
-The flow coefficient `v_2\{2\}` (depending on the random seed this may return ``NaN``)::
+The flow coefficient `v_2\{2\}`::
 
    v22 = vnk.flow(2, 2)
+
+Sometimes flow cumulants `v_n\{k\}` will be imaginary, especially higher-order cumulants (`k > 2`).
+In this case, the keyword argument ``imaginary`` determines what ``Cumulant.flow()`` returns:
+
+- ``'nan'`` (default) -- Return NaN and raise a ``RuntimeWarning``.
+- ``'negative'`` -- Return the negative absolute value.
+- ``'zero'`` -- Return ``0.0``.
+
+Depending on the random seed the current example may have imaginary `v_2\{2\}` and so ``vnk.flow(2, 2)`` will return ``Nan``.
+If instead you want the negative absolute value::
+
+   v22 = vnk.flow(2, 2, imaginary='negative')
 
 That's all we can calculate with the current data since we only have `Q_2`.
 In general, flow coefficient `v_n\{k\}` requires `Q_n, Q_{2n}, \ldots, Q_{nk/2}`, e.g.

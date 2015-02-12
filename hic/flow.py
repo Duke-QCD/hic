@@ -50,17 +50,26 @@ class Cumulant(object):
     :param array-like q2, q3, ...:
         `Q_n` vectors as positional arguments.
 
-    :param array-like other_qn:
+    :param array-like qn_kwargs:
         `Q_n` vectors as keyword arguments.
 
+    Member functions ``correlation``, ``cumulant``, and ``flow`` compute the
+    correlation function, cumulant, and flow coefficient, respectively.  Each
+    takes two arguments ``(n, k)`` where ``n`` (positive integer) is the
+    anisotropy order and ``k`` (even positive integer) is the correlation
+    order.  A given `(n, k)` requires flow vectors `Q_n, Q_{2n}, \ldots,
+    Q_{nk/2}`, e.g. ``(2, 4)`` requires ``q2, q4``.  Functions will raise
+    ``ValueError`` if they don't have the required flow vectors.  Currently
+    ``k=2`` and ``k=4`` are implemented; ``k=6`` is planned.
+
     """
-    def __init__(self, multiplicities, *qn, **other_qn):
+    def __init__(self, multiplicities, *qn, **qn_kwargs):
         # Multiplicity must be stored as floating point because the large
         # powers of M calculated in n-particle correlations can overflow
         # integers, e.g. 2000^6 > 2^64.
         self._M = np.asarray(multiplicities, dtype=float).ravel()
 
-        qn_dict = {int(k.lstrip('q')): v for k, v in other_qn.items()}
+        qn_dict = {int(k.lstrip('q')): v for k, v in qn_kwargs.items()}
         qn_dict.update(enumerate(qn, start=2))
         self._qn = {k: np.asarray(v, dtype=complex).ravel()
                     for k, v in qn_dict.items()
@@ -115,7 +124,7 @@ class Cumulant(object):
         Calculate `\langle k \rangle_n`,
         the `k`-particle correlation function for `n`\ th-order anisotropy.
 
-        :param int n: Flow order.
+        :param int n: Anisotropy order.
         :param int k: Correlation order.
 
         """
@@ -127,7 +136,7 @@ class Cumulant(object):
         Calculate `c_n\{k\}`,
         the `k`-particle cumulant for `n`\ th-order anisotropy.
 
-        :param int n: Flow order.
+        :param int n: Anisotropy order.
         :param int k: Correlation order.
 
         """
@@ -146,7 +155,7 @@ class Cumulant(object):
         Calculate `v_n\{k\}`,
         the estimate of flow coefficient `v_n` from the `k`-particle cumulant.
 
-        :param int n: Flow order.
+        :param int n: Anisotropy order.
         :param int k: Correlation order.
 
         :param str imaginary: (optional)
@@ -179,17 +188,19 @@ class Sampler(object):
     r"""
     Random flow event generator.
 
-    A ``Sampler`` object represents a ficticious event with pre-specified flow
-    coefficients `v_n`.  It computes and randomly samples `dN/d\phi` as a
-    probability density function (PDF).
-
-    All arguments are optional; no arguments implies zero flow (flat PDF).
+    A ``Sampler`` object represents an event with specified flow coefficients
+    `v_n`.  It computes and randomly samples `dN/d\phi` as a probability
+    density function (PDF).
 
     :param float v2, v3, ...:
         Flow coefficients as positional arguments.
 
     :param float vn_kwargs:
         Flow coefficients as keyword arguments.
+
+    If no ``vn`` arguments are given, ``Sampler`` will have zero flow, i.e.
+    ``Sampler.pdf()`` will be flat and ``Sampler.sample()`` will generate
+    uniform numbers from `[-\pi, \pi)`.
 
     """
     def __init__(self, *vn, **vn_kwargs):
