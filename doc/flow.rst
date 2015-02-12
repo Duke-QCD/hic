@@ -44,7 +44,7 @@ We can also do multiple `Q_n` at once::
 
 Flow cumulants
 --------------
-Multi-particle flow cumulants are implemented in the class ``hic.flow.FlowCumulant`` using the direct *Q*-cumulant method from `Bilandzic (2010) <http://inspirehep.net/record/871528>`_, which calculates cumulants from event-by-event multiplicities and `Q_n` vectors.
+Multi-particle flow cumulants are implemented in the class ``hic.flow.Cumulant`` using the direct *Q*-cumulant method from `Bilandzic (2010) <http://inspirehep.net/record/871528>`_, which calculates cumulants from event-by-event multiplicities and `Q_n` vectors.
 
 Let's generate some toy data::
 
@@ -53,9 +53,9 @@ Let's generate some toy data::
    mult = np.array([p.size for p in phi])
    q2 = np.array([flow.qn(p, 2) for p in phi])
 
-Then create a ``FlowCumulant``::
+Then create a ``Cumulant``::
 
-   vnk = flow.FlowCumulant(mult, q2)
+   vnk = flow.Cumulant(mult, q2)
 
 And now we can calculate flow correlations and cumulants.
 The correlation function `\langle 2 \rangle_2`::
@@ -84,21 +84,21 @@ If you attempt to calculate something and don't have sufficient data, you'll get
 Let's calculate some higher-order flow vectors and use them::
 
    q3, q4 = np.array([flow.qn(p, 3, 4) for p in phi]).T
-   vnk = flow.FlowCumulant(mult, q2, q3, q4)
+   vnk = flow.Cumulant(mult, q2, q3, q4)
    v32 = vnk.flow(3, 2)  # works now
    v24 = vnk.flow(2, 4)  # works
    v42 = vnk.flow(4, 2)  # works
    v52 = vnk.flow(5, 2)  # ValueError (no q5!)
 
-There are multiple ways to pass flow vector data to the ``FlowCumulant`` class.
+There are multiple ways to pass flow vector data to the ``Cumulant`` class.
 So far we've used the shorthand syntax, where we list ``qn`` in order starting with ``q2``.
 You can skip a ``qn`` by specifying ``None``, for example if you have ``q2`` and ``q4`` but not ``q3``::
 
-   flow.FlowCumulant(mult, q2, None, q4)
+   flow.Cumulant(mult, q2, None, q4)
 
 You can also use keyword arguments in any order, e.g.::
 
-   flow.FlowCumulant(mult, q2=q2, q4=q4)
+   flow.Cumulant(mult, q2=q2, q4=q4)
 
 Note that the only way to pass ``q1`` is through a keyword argument.
 Here are some more examples---these are all equivalent::
@@ -111,20 +111,20 @@ Here are some more examples---these are all equivalent::
 Random sampling
 ---------------
 In the last section we sampled random azimuthal angles uniformly from `[-\pi, \pi)`, i.e. from a fictitious event with *zero* flow.
-Class ``hic.flow.FlowSampler`` generates random angles with *nonzero* flow by sampling `dN/d\phi` as a probability density function (PDF).
+Class ``hic.flow.Sampler`` generates random angles with *nonzero* flow by sampling `dN/d\phi` as a probability density function (PDF).
 For example to sample 1000 angles with `v_2 = 0.1`::
 
-   sampler = flow.FlowSampler(0.1)
+   sampler = flow.Sampler(0.1)
    phi = sampler.sample(1000)
 
-The syntax for specifying `v_n` is the same as `Q_n` for ``FlowCumulant``: either the shorthand list starting from ``v2`` or keyword arguments.
+The syntax for specifying `v_n` is the same as `Q_n` for ``Cumulant``: either the shorthand list starting from ``v2`` or keyword arguments.
 These are all equivalent::
 
    0.1, None, 0.02
    0.1, v4=0.02
    v2=0.1, v4=0.02
 
-``FlowSampler`` can also evaluate evaluate `dN/d\phi` rather than sampling it::
+``Sampler`` can also evaluate evaluate `dN/d\phi` rather than sampling it::
 
    phi = np.linspace(-np.pi, np.pi, 1000)
    dndphi = sampler.pdf(phi)
@@ -137,7 +137,7 @@ Let's put this together to sample the flow PDF and histogram the samples on top 
 
    M = 10000
    vn = .1, .05, .02, .01  # shorthand: v2, v3, v4, v5
-   sampler = flow.FlowSampler(*vn)
+   sampler = flow.Sampler(*vn)
    phi = sampler.sample(M)
    plt.hist(phi, bins=50, range=(-np.pi, np.pi),
             histtype='stepfilled', normed=True, alpha=.5)

@@ -7,7 +7,7 @@ import warnings
 
 import numpy as np
 
-__all__ = 'qn', 'FlowCumulant', 'FlowSampler'
+__all__ = 'qn', 'Cumulant', 'Sampler'
 
 
 def qn(phi, *n):
@@ -36,7 +36,7 @@ def qn(phi, *n):
     return qn
 
 
-class FlowCumulant(object):
+class Cumulant(object):
     r"""
     Multi-particle flow correlations and cumulants for an ensemble of events.
 
@@ -175,12 +175,12 @@ class FlowCumulant(object):
         return vnk
 
 
-class FlowSampler(object):
+class Sampler(object):
     r"""
     Random flow event generator.
 
-    A ``FlowSampler`` object represents a ficticious event with pre-specified
-    flow coefficients `v_n`.  It computes and randomly samples `dN/d\phi` as a
+    A ``Sampler`` object represents a ficticious event with pre-specified flow
+    coefficients `v_n`.  It computes and randomly samples `dN/d\phi` as a
     probability density function (PDF).
 
     All arguments are optional; no arguments implies zero flow (flat PDF).

@@ -55,7 +55,7 @@ def test_cumulant():
     ])).mean()
 
     q2, q4 = (np.exp(1j*n*phi).sum() for n in (2, 4))
-    vnk = flow.FlowCumulant(M, q2, None, q4)
+    vnk = flow.Cumulant(M, q2, None, q4)
     assert sorted(vnk._qn.keys()) == [2, 4], \
         'Incorrect parsing of qn arguments.'
     corr2, corr4 = (vnk.correlation(2, n) for n in (2, 4))
@@ -77,7 +77,7 @@ def test_cumulant():
     M = 100
     qfluct = M**.5*np.ones(Nev)
     qn = 1.1*qfluct, qfluct, 0.9*qfluct
-    vnk = flow.FlowCumulant(M*np.ones(Nev), *qn)
+    vnk = flow.Cumulant(M*np.ones(Nev), *qn)
 
     v22 = vnk.flow(2, 2)
     assert v22 > 0, \
@@ -114,7 +114,7 @@ def test_cumulant():
 def test_sampler():
     """flow random sampling"""
 
-    sampler = flow.FlowSampler()
+    sampler = flow.Sampler()
     assert sampler._n is None and sampler._vn is None, \
         'Incorrect vn argument parsing.'
 
@@ -134,9 +134,9 @@ def test_sampler():
 
     vn = v2, v3, v4, v5 = .1, .05, 0., .02
     for sampler in (
-            flow.FlowSampler(v2, v3, None, v5),
-            flow.FlowSampler(v2, v3, v5=v5),
-            flow.FlowSampler(v5=v5, v2=v2, v3=v3)
+            flow.Sampler(v2, v3, None, v5),
+            flow.Sampler(v2, v3, v5=v5),
+            flow.Sampler(v5=v5, v2=v2, v3=v3)
     ):
         assert (
             np.all(sampler._n == (2, 3, 5)) and

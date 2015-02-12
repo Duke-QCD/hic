@@ -34,14 +34,14 @@ Calculate flow cumulants:
 
    from hic import flow
 
-   vnk = flow.FlowCumulant(mult, q2, q3)
+   vnk = flow.Cumulant(mult, q2, q3)
    v22 = vnk.flow(2, 2)
 
 Randomly sample events with specified flows:
 
 .. code:: python
 
-   sampler = flow.FlowSampler(v2, v3)
+   sampler = flow.Sampler(v2, v3)
    phi = sampler.sample(mult)
 
 Calculate initial condition eccentricities:
