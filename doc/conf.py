@@ -121,6 +121,7 @@ html_context = dict(
     github_repo='hic',
     github_version='master',
     conf_py_path='/doc/',
+    source_suffix = source_suffix,
 )
 
 # The name for this set of Sphinx documents.  If None, it defaults to
