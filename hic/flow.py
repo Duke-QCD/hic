@@ -69,7 +69,11 @@ class Cumulant(object):
         # integers, e.g. 2000^6 > 2^64.
         self._M = np.asarray(multiplicities, dtype=float).ravel()
 
-        qn_dict = {int(k.lstrip('q')): v for k, v in qn_kwargs.items()}
+        try:
+            qn_dict = {int(k.lstrip('q')): v for k, v in qn_kwargs.items()}
+        except ValueError:
+            raise TypeError("Keyword parameters must have the form 'qN' "
+                            "where N is an integer.")
         qn_dict.update(enumerate(qn, start=2))
         self._qn = {k: np.asarray(v, dtype=complex).ravel()
                     for k, v in qn_dict.items()
@@ -207,7 +211,11 @@ class Sampler(object):
         if not vn and not vn_kwargs:
             self._n = self._vn = None
         else:
-            vn_dict = {int(k.lstrip('v')): v for k, v in vn_kwargs.items()}
+            try:
+                vn_dict = {int(k.lstrip('v')): v for k, v in vn_kwargs.items()}
+            except ValueError:
+                raise TypeError("Keyword parameters must have the form 'vN' "
+                                "where N is an integer.")
             vn_dict.update((k, v) for k, v in enumerate(vn, start=2)
                            if v is not None and v != 0.)
             kwargs = dict(dtype=float, count=len(vn_dict))

@@ -110,10 +110,14 @@ def test_cumulant():
     # missing qn
     assert_raises(ValueError, vnk.cumulant, 4, 4)
 
+    # bad class keyword args
+    assert_raises(TypeError, flow.Cumulant, M, v2=q2)
+
 
 def test_sampler():
     """flow random sampling"""
 
+    # zero flow
     sampler = flow.Sampler()
     assert sampler._n is None and sampler._vn is None, \
         'Incorrect vn argument parsing.'
@@ -132,6 +136,7 @@ def test_sampler():
     assert np.all(np.abs(vnobs) < 3.*M**(-.5)), \
         'Flows are not within statistical fluctuation.'
 
+    # nonzero flow
     vn = v2, v3, v4, v5 = .1, .05, 0., .02
     for sampler in (
             flow.Sampler(v2, v3, None, v5),
@@ -160,3 +165,6 @@ def test_sampler():
         'Sampled angles are not in [-pi, pi).'
     assert np.all(np.abs(vn - vnobs) < 3.*M**(-.5)), \
         'Flows are not within statistical fluctuation.'
+
+    # bad args
+    assert_raises(TypeError, flow.Sampler, M, x2=.1)
