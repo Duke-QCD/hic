@@ -111,24 +111,23 @@ Here are some more examples---these are all equivalent::
 Random sampling
 ---------------
 In the last section we sampled random azimuthal angles uniformly from `[-\pi, \pi)`, i.e. from a fictitious event with *zero* flow.
-The function ``hic.flow.sample_flow_pdf`` generates random angles with *nonzero* flow by sampling `dN/d\phi` as a probability density function (PDF).
+Class ``hic.flow.FlowSampler`` generates random angles with *nonzero* flow by sampling `dN/d\phi` as a probability density function (PDF).
 For example to sample 1000 angles with `v_2 = 0.1`::
 
-   phi = flow.sample_flow_pdf(1000, 0.1)
+   sampler = flow.FlowSampler(0.1)
+   phi = sampler.sample(1000)
 
-The syntax for specifying `v_n` is the same as `Q_n` for ``FlowCumulant``: you can use the shorthand list starting from ``v2`` or keyword arguments.
+The syntax for specifying `v_n` is the same as `Q_n` for ``FlowCumulant``: either the shorthand list starting from ``v2`` or keyword arguments.
 These are all equivalent::
 
    0.1, None, 0.02
    0.1, v4=0.02
    v2=0.1, v4=0.02
 
-Finally, the function ``hic.flow.flow_pdf`` evaluates `dN/d\phi` rather than sampling it::
+``FlowSampler`` can also evaluate evaluate `dN/d\phi` rather than sampling it::
 
    phi = np.linspace(-np.pi, np.pi, 1000)
-   dndphi = flow.flow_pdf(phi, 0.1)
-
-The syntax for inputting `v_n` is the same as for ``sample_flow_pdf``.
+   dndphi = sampler.pdf(phi)
 
 Let's put this together to sample the flow PDF and histogram the samples on top of the smooth curve::
 
@@ -138,11 +137,12 @@ Let's put this together to sample the flow PDF and histogram the samples on top 
 
    M = 10000
    vn = .1, .05, .02, .01  # shorthand: v2, v3, v4, v5
-   phi = flow.sample_flow_pdf(M, *vn)
+   sampler = flow.FlowSampler(*vn)
+   phi = sampler.sample(M)
    plt.hist(phi, bins=50, range=(-np.pi, np.pi),
             histtype='stepfilled', normed=True, alpha=.5)
    x = np.linspace(-np.pi, np.pi, 1000)
-   plt.plot(x, flow.flow_pdf(x, *vn), color='.3', lw=1.5)
+   plt.plot(x, sampler.pdf(x), color='.3', lw=1.5)
    plt.xlim(-np.pi, np.pi)
    plt.ylim(ymin=0)
    plt.xlabel(r'$\phi$')

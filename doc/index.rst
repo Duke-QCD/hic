@@ -33,7 +33,8 @@ Calculate flow cumulants::
 
 Randomly sample events with specified flows::
 
-   phi = flow.sample_flow_pdf(mult, v2, v3)
+   sampler = flow.FlowSampler(v2, v3)
+   phi = sampler.sample(mult)
 
 Calculate initial condition eccentricities::
 

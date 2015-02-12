@@ -34,62 +34,12 @@ def test_qn():
     ), 'Simultaneous qn do not agree with individuals.'
 
 
-def test_flow_pdf():
-    """flow probability density function"""
-
-    phi = np.random.rand(5)
-    assert np.allclose(flow.flow_pdf(phi), 1/(2*np.pi)), \
-        'Incorrect uniform flow pdf.'
-
-    v2, v3, v4 = .1, .05, .03
-    pdf = (1 + 2*v2*np.cos(2*phi) + 2*v3*np.cos(3*phi))/(2*np.pi)
-    assert np.allclose(flow.flow_pdf(phi, v2, v3), pdf), \
-        'Incorrect nonuniform flow pdf.'
-
-    assert np.allclose(
-        flow.flow_pdf(phi, v2, v3, v4),
-        flow.flow_pdf(phi, v3=v3, v4=v4, v2=v2)
-    ), 'Incorrect parsing of vn keyword args.'
-    assert np.allclose(
-        flow.flow_pdf(phi, v2, None, v4),
-        flow.flow_pdf(phi, v4=v4, v2=v2)
-    ), 'Incorrect parsing of vn = None positional arg.'
-
-
-def _check_phi(M, *args, **kwargs):
-    phi = flow.sample_flow_pdf(M, *args, **kwargs)
-
-    assert phi.size == M, \
-        'Incorrect number of particles.'
-    assert np.all((phi >= -np.pi) & (phi < np.pi)), \
-        'Azimuthal angle not in [-pi, pi).'
-
-
-def test_sample_flow_pdf():
-    """event generation"""
-
-    M = 10
-    _check_phi(M)
-    _check_phi(M, .1)
-    _check_phi(M, .1, .01)
-    _check_phi(M, .1, .01, v5=.01)
-
-    M = 1000
-    vn = .1, .03, .01
-    phi = flow.sample_flow_pdf(M, *vn)
-
-    n = np.arange(2, 2+len(vn), dtype=float)
-    vnobs = np.cos(np.outer(n, phi)).mean(axis=1)
-    assert np.all(np.abs(vn - vnobs) < 3.*M**(-.5)), \
-        'Flows are not within statistical fluctuation.'
-
-
 def assert_close(a, b, msg='', tol=1e-15):
     assert abs(a - b) < tol, \
         '{}\n{} != {}'.format(msg, a, b)
 
 
-def test_flow_cumulant():
+def test_cumulant():
     """flow correlations and cumulants"""
 
     # Compare n-particle correlations to explicitly calculating all
@@ -159,3 +109,54 @@ def test_flow_cumulant():
 
     # missing qn
     assert_raises(ValueError, vnk.cumulant, 4, 4)
+
+
+def test_sampler():
+    """flow random sampling"""
+
+    sampler = flow.FlowSampler()
+    assert sampler._n is None and sampler._vn is None, \
+        'Incorrect vn argument parsing.'
+
+    phi = np.random.rand(5)
+    assert np.allclose(sampler.pdf(phi), 1/(2*np.pi)), \
+        'Incorrect uniform flow pdf.'
+
+    M = 1000
+    phi = sampler.sample(M)
+    vnobs = np.cos(np.outer(np.arange(2, 6), phi)).mean(axis=1)
+    assert phi.size == M, \
+        'Incorrect number of particles.'
+    assert np.all((phi >= -np.pi) & (phi < np.pi)), \
+        'Sampled angles are not in [-pi, pi).'
+    assert np.all(np.abs(vnobs) < 3.*M**(-.5)), \
+        'Flows are not within statistical fluctuation.'
+
+    vn = v2, v3, v4, v5 = .1, .05, 0., .02
+    for sampler in (
+            flow.FlowSampler(v2, v3, None, v5),
+            flow.FlowSampler(v2, v3, v5=v5),
+            flow.FlowSampler(v5=v5, v2=v2, v3=v3)
+    ):
+        assert (
+            np.all(sampler._n == (2, 3, 5)) and
+            np.all(sampler._vn == (v2, v3, v5))
+        ), 'Incorrect vn argument parsing.'
+
+    pdf = (1 +
+           2*v2*np.cos(2*phi) +
+           2*v3*np.cos(3*phi) +
+           2*v5*np.cos(5*phi)
+           )/(2*np.pi)
+    assert np.allclose(sampler.pdf(phi), pdf), \
+        'Incorrect nonuniform flow pdf.'
+
+    M = 1000
+    phi = sampler.sample(M)
+    vnobs = np.cos(np.outer(np.arange(2, 6), phi)).mean(axis=1)
+    assert phi.size == M, \
+        'Incorrect number of particles.'
+    assert np.all((phi >= -np.pi) & (phi < np.pi)), \
+        'Sampled angles are not in [-pi, pi).'
+    assert np.all(np.abs(vn - vnobs) < 3.*M**(-.5)), \
+        'Flows are not within statistical fluctuation.'
