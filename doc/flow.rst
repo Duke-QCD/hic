@@ -22,7 +22,7 @@ The flow vector
 The complex flow vector for an event is
 
 .. math::
-   
+
    Q_n = \sum_{i=1}^M e^{in\phi_i}.
 
 The magnitude of the per-particle flow vector is the *observed* flow `v_n^\text{obs} = |Q_n|/M`, which will in general be different from the true flow due to finite-multiplicity fluctuations.
@@ -119,6 +119,14 @@ Here are some more examples---these are all equivalent::
    q2, q3, q4, q6=q6
    q2, q3=q3, q4=q4, q6=q6
    q6=q6, q4=q4, q3=q3, q2=q2
+
+Statistical error
+~~~~~~~~~~~~~~~~~
+The ``Cumulant`` class can also calculate statistical error for two-particle cumulants.
+Simply specify ``error=True`` for ``correlation()``, ``cumulant()``, and ``flow()`` and they will return both the normally calculated quantity and the corresponding statistical error.
+For example::
+
+   v22, v22err = vnk.flow(2, 2, error=True)
 
 Random sampling
 ---------------

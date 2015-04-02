@@ -80,6 +80,7 @@ class Cumulant(object):
                     if v is not None}
 
         self._corr = collections.defaultdict(dict)
+        self._corr_err = collections.defaultdict(dict)
 
     def _get_qn(self, n):
         try:
@@ -90,7 +91,7 @@ class Cumulant(object):
                 .format(n)
             )
 
-    def _calculate_corr(self, n, k):
+    def _calculate_corr(self, n, k, error=False):
         # skip if this correlation was already calculated
         if k in self._corr[n]:
             return
@@ -123,7 +124,34 @@ class Cumulant(object):
         else:
             raise ValueError('Unknown k: {}.'.format(k))
 
-    def correlation(self, n, k):
+    def _calculate_corr_err(self, n, k):
+        # skip if this error was already calculated
+        if k in self._corr_err[n]:
+            return
+
+        if k == 2:
+            M = self._M
+            weights = M*(M-1)
+            w1 = np.einsum('i->', weights)  # sum of weights
+            w2 = np.inner(weights, weights)  # sum of squared weights
+
+            # event-by-event differences from mean: <2>_i - <<2>>
+            qn = self._get_qn(n)
+            diff = (np.real(qn*qn.conj())-M)/weights - self._corr[n][k]
+
+            # weighted variance
+            var = np.sum(weights*np.square(diff)) / w1
+
+            # unbiased variance s^2
+            ssq = var / (1. - w2/(w1*w1))
+
+            # final error of <<2>>
+            self._corr_err[n][k] = np.sqrt(w2*ssq)/w1
+
+        else:
+            raise ValueError('Error is only implemented for k == 2.')
+
+    def correlation(self, n, k, error=False):
         r"""
         Calculate `\langle k \rangle_n`,
         the `k`-particle correlation function for `n`\ th-order anisotropy.
@@ -131,9 +159,20 @@ class Cumulant(object):
         :param int n: Anisotropy order.
         :param int k: Correlation order.
 
+        :param bool error:
+            Whether to calculate statistical error
+            (for `\langle 2 \rangle` only).
+            If true, return a tuple ``(corr, corr_error)``.
+
         """
         self._calculate_corr(n, k)
-        return self._corr[n][k]
+        corr_nk = self._corr[n][k]
+
+        if error:
+            self._calculate_corr_err(n, k)
+            return corr_nk, self._corr_err[n][k]
+        else:
+            return corr_nk
 
     def cumulant(self, n, k, error=False):
         r"""
@@ -143,8 +182,12 @@ class Cumulant(object):
         :param int n: Anisotropy order.
         :param int k: Correlation order.
 
+        :param bool error:
+            Whether to calculate statistical error (for `c_n\{2\}` only).
+            If true, return a tuple ``(cn2, cn2_error)``.
+
         """
-        corr_nk = self.correlation(n, k)
+        corr_nk = self.correlation(n, k, error=error)
 
         if k == 2:
             return corr_nk
@@ -162,6 +205,10 @@ class Cumulant(object):
         :param int n: Anisotropy order.
         :param int k: Correlation order.
 
+        :param bool error:
+            Whether to calculate statistical error (for `v_n\{2\}` only).
+            If true, return a tuple ``(vn2, vn2_error)``.
+
         :param str imaginary: (optional)
             Determines behavior when the computed flow is imaginary:
 
@@ -170,7 +217,11 @@ class Cumulant(object):
             - ``'zero'`` -- Return ``0.0``.
 
         """
-        cnk = self.cumulant(n, k)
+        cnk = self.cumulant(n, k, error=error)
+
+        if error:
+            cnk, cnk_err = cnk
+
         vnk_to_k = self._cnk_prefactor[k] * cnk
         kinv = 1/k
 
@@ -185,7 +236,10 @@ class Cumulant(object):
                 warnings.warn('Imaginary flow: returning NaN.', RuntimeWarning)
                 vnk = float('nan')
 
-        return vnk
+        if k == 2 and error:
+            return vnk, .5/np.sqrt(abs(cnk)) * cnk_err
+        else:
+            return vnk
 
 
 class Sampler(object):

@@ -102,10 +102,46 @@ def test_cumulant():
     assert v42_negative < 0, \
         'This v_4{2} must be negative.\n{}'.format(v42_negative)
 
+    # Test statistical error.
+    v22, v22err = vnk.flow(2, 2, error=True)
+    assert v22err < 1e-16, \
+        'This v_2{2} error must vanish.\n{}'.format(v22err)
+    assert (v22, v22err) == vnk.flow(2, 2, error=True), \
+        'Cached result does not match original.'
+
+    Nev = 5
+    M = 10
+    w1 = Nev*M*(M-1)
+    w2 = Nev*np.square(M*(M-1))
+
+    phi_events = 2*np.pi*np.random.rand(Nev, M)
+    q2, q4 = (np.array([flow.qn(phi, n) for phi in phi_events])
+              for n in (2, 4))
+    vnk = flow.Cumulant(np.full(Nev, M), q2=q2, q4=q4)
+
+    for n in 2, 4:
+        corr_ebe = np.array([
+            np.exp(n*1j*np.array([
+                (p1-p2) for p1, p2 in itertools.permutations(phi, 2)
+            ])).mean()
+            for phi in phi_events])
+
+        corr_true = corr_ebe.mean()
+        corr_err_true = np.sqrt(w2/(w1*w1 - w2)) * corr_ebe.std()
+
+        corr, corr_err = vnk.correlation(n, 2, error=True)
+        assert_close(corr, corr_true,
+                     'Incorrect {}-particle correlation.'.format(n))
+        assert_close(corr_err, corr_err_true,
+                     'Incorrect {}-particle correlation error.'.format(n))
+
     # Test bad arguments.
 
     # invalid k
     assert_raises(ValueError, vnk.correlation, 2, 3)
+
+    # error only implemented for k == 2
+    assert_raises(ValueError, vnk.correlation, 2, 4, error=True)
 
     # missing qn
     assert_raises(ValueError, vnk.cumulant, 4, 4)
