@@ -117,7 +117,7 @@ def test_cumulant():
     phi_events = 2*np.pi*np.random.rand(Nev, M)
     q2, q4 = (np.array([flow.qn(phi, n) for phi in phi_events])
               for n in (2, 4))
-    vnk = flow.Cumulant(np.full(Nev, M), q2=q2, q4=q4)
+    vnk = flow.Cumulant(np.full(Nev, M, dtype=float), q2=q2, q4=q4)
 
     for n in 2, 4:
         corr_ebe = np.array([
