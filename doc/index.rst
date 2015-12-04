@@ -5,7 +5,7 @@ hic
 e.g. calculating flow coefficients `v_n` and initial condition eccentricities `\varepsilon_n`.
 It's a community project designed to facilitate computational heavy-ion research and reduce code duplication.
 
-``hic`` is under active development on github_, and :ref:`contributions <contributing>` are welcome!
+``hic`` is open source on github_, and :ref:`contributions <contributing>` are welcome!
 
 Installation
 ------------
@@ -14,7 +14,7 @@ Requirements: Python 2.7 or 3.3+ with numpy_.
 ``hic`` is prerelease software.
 You can install the development version with pip_::
 
-   pip install git+https://github.com/jbernhard/hic.git
+   pip install git+https://github.com/Duke-QCD/hic.git
 
 To run the tests, install nose_ and run ::
 
@@ -97,9 +97,9 @@ Please follow these general coding guidelines:
 
 - Make topic branches and submit a `pull request`_ for each branch.
 
-.. _github: https://github.com/jbernhard/hic
-.. _issue: https://github.com/jbernhard/hic/issues
-.. _pull request: https://github.com/jbernhard/hic/pulls
+.. _github: https://github.com/Duke-QCD/hic
+.. _issue: https://github.com/Duke-QCD/hic/issues
+.. _pull request: https://github.com/Duke-QCD/hic/pulls
 .. _fork: https://help.github.com/articles/fork-a-repo
 .. _numpy: http://www.numpy.org
 .. _pip: https://pip.pypa.io

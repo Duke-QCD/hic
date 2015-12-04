@@ -15,7 +15,7 @@ setup(
     long_description=long_description,
     author='Jonah Bernhard',
     author_email='jonah.bernhard@gmail.com',
-    url='https://github.com/jbernhard/hic',
+    url='https://github.com/Duke-QCD/hic',
     license='MIT',
     packages=['hic', 'hic.test'],
     install_requires=['numpy'],

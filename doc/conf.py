@@ -117,7 +117,7 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # Enable 'edit on github' link in rtd theme.
 html_context = dict(
     display_github=True,
-    github_user='jbernhard',
+    github_user='Duke-QCD',
     github_repo='hic',
     github_version='master',
     conf_py_path='/doc/',
