@@ -4,11 +4,12 @@ python:
   - "2.7"
   - "3.3"
   - "3.4"
+  - "3.5"
 
 before_install:
   - sudo apt-get update
   - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
-  - bash miniconda.sh -b
+  - bash miniconda.sh -b -p "$HOME/miniconda"
   - export PATH="$HOME/miniconda/bin:$PATH"
   - conda config --set always_yes yes --set changeps1 no
   - conda update conda
@@ -17,9 +18,6 @@ before_install:
 
 install:
   - conda install pip setuptools numpy nose
-  - pip install coveralls
   - python setup.py install
 
 script: nosetests --verbose --with-coverage --cover-package=hic
-
-after_success: coveralls

@@ -4,9 +4,6 @@ hic
 .. image:: http://img.shields.io/travis/Duke-QCD/hic.svg?style=flat-square
   :target: https://travis-ci.org/Duke-QCD/hic
 
-.. image:: http://img.shields.io/coveralls/Duke-QCD/hic.svg?style=flat-square
-  :target: https://coveralls.io/r/Duke-QCD/hic
-
 Tools for analyzing heavy-ion collision simulations in Python.
 
 Documentation
