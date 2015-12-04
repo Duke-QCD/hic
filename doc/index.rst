@@ -11,10 +11,9 @@ Installation
 ------------
 Requirements: Python 2.7 or 3.3+ with numpy_.
 
-``hic`` is prerelease software.
-You can install the development version with pip_::
+Install the latest release with pip_::
 
-   pip install git+https://github.com/Duke-QCD/hic.git
+   pip install hic
 
 To run the tests, install nose_ and run ::
 
